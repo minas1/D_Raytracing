@@ -1,0 +1,27 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="raytracing/raytracing/sphere.d">
+    <Files>
+      <File FileName="raytracing/main.d" Line="59" Column="16" />
+      <File FileName="raytracing/raytracing/surface.d" Line="6" Column="23" />
+      <File FileName="raytracing/raytracing/sphere.d" Line="28" Column="25" />
+      <File FileName="raytracing/raytracing/vector.d" Line="279" Column="1" />
+      <File FileName="raytracing/raytracing/scene.d" Line="17" Column="7" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="raytracing" expanded="True">
+            <Node name="raytracing" expanded="True">
+              <Node name="sphere.d" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
