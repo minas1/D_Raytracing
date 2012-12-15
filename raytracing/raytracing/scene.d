@@ -20,20 +20,22 @@ struct Scene
 	// TODO: complete this function
 	bool trace(Ray ray, ref HitInfo hitInfo, float t0)
 	{
-		/*HitInfo hitInfo,
-				closestHitInfo;	// hitInfo of the closest object
+		//HitInfo hitInfo,
+		HitInfo	closestHitInfo;	// hitInfo of the closest object
 		Surface closestObject;	// the object that's closest
 		float t = float.max;	// the minimum t
 		
-		foreach(obj; scene.objects)
+		foreach(obj; objects)
 		{
-			if( obj.hit(r, 0.1f, 1000, hitInfo) && hitInfo.t < t ) // hit?
+			if( obj.hit(ray, t0, 1000, hitInfo) && hitInfo.t < t ) // hit?
 			{
 				t = hitInfo.t;
 				closestObject = obj;
 				closestHitInfo = hitInfo;
 			}
-		}*/
-		return false;
+		}
+		
+		hitInfo = closestHitInfo;
+		return closestObject !is null;
 	}
 }

@@ -58,27 +58,36 @@ void main()
 	Scene scene;
 	
 	// create a sphere
-	Vector3 center = {2, 0, 5};
+	Vector3 center = {-2, 0, 5};
 	Sphere s = new Sphere(center, 1);
 	s.material = new SimpleColor(154, 205, 50);
 	
 	// and another one
-	center.z = 50;
+	center.x = 4;
+	center.y = -1;
+	center.z = 10;
+	Sphere s3 = new Sphere(center, 1.0f);
+	s3.material = new SimpleColor(65, 145, 201);
+	
+	// and another one
+	center.x = 0;
 	center.y = 10;
+	center.z = 50;
 	Sphere s2 = new Sphere(center, 20);
 	s2.material = new SimpleColor(205, 155, 155);
 	
 	scene.objects.insert(s); // add the sphere into the scene
 	scene.objects.insert(s2);
+	scene.objects.insert(s3);
 	
 	// add lights
 	Light l = new Light();
-	l.position = Vector3(-15, 20, 0);
+	l.position = Vector3(-5, 0, 0);
 	l.I = Vector3(173/255.0f, 234/255.0f, 234/255.0f); // 230;232;250
 	scene.lights.insert(l);
 	
 	l = new Light();
-	l.position = Vector3(15, -20, 0); // TODO: gives wrong colors
+	l.position = Vector3(3, 4, 0); // TODO: gives wrong colors
 	l.I = Vector3(207/255.0f, 181/255.0f, 57/255.0f);
 	scene.lights.insert(l);
 	
@@ -94,24 +103,15 @@ void main()
 			Vector3 p = {ASPECT_RATIO * (x - SCREEN_WIDTH * 0.5f) / (SCREEN_WIDTH * 0.5f), (y - SCREEN_HEIGHT * 0.5f) / (SCREEN_HEIGHT * 0.5f), 0};
 			Ray r = {cameraPos, p - cameraPos};
 			
-			HitInfo hitInfo,
-					closestHitInfo;	// hitInfo of the closest object
-			Surface closestObject;	// the object that's closest
-			float t = float.max;	// the minimum t
+			HitInfo hitInfo;
+			bool hit = scene.trace(r, hitInfo, 0.1f);
 			
-			foreach(obj; scene.objects)
+			if( hit )
 			{
-				if( obj.hit(r, 0.1f, 1000, hitInfo) && hitInfo.t < t ) // hit?
-				{
-					t = hitInfo.t;
-					closestObject = obj;
-					closestHitInfo = hitInfo;
-				}
-			}
-			
-			if( closestObject !is null )
-			{
-				Vector3 color = closestObject.shade(closestHitInfo, scene);
+				Vector3 color = hitInfo.hitSurface.shade(hitInfo, scene);
+				if( color.x > 1.0f ) color.x = 1.0f;
+				if( color.y > 1.0f ) color.y = 1.0f;
+				if( color.z > 1.0f ) color.z = 1.0f;
 				
 				writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(color.x * 255), cast(ubyte)(color.y * 255), cast(ubyte)(color.z * 255));	
 			}
@@ -173,28 +173,35 @@ class SimpleColor : Material
 		
 			lightVector.normalize();
 			
-			if( hitInfo.surfaceNormal.dot(lightVector) > 0 )
+			HitInfo hitInfo2;
+			Ray ray = {hitInfo.hitPoint, light.position - hitInfo.hitPoint};
+			ray.d.normalize();
+			if( !scene.trace(ray, hitInfo2, 0.1f) )
 			{
-				finalColor = finalColor + light.I * color * hitInfo.surfaceNormal.dot(lightVector);
-						
-				hitInfo.ray = -hitInfo.ray;
-				hitInfo.ray.normalize();
-				
-				// add specular component (only when the diffuse component's dot product is positive)
-				Vector3 H = (lightVector + hitInfo.ray) * 0.5f; // find the half vector, H
-				
-				H.normalize();
-				
-				float specularDotProduct = dot(hitInfo.surfaceNormal, H);
-				
-				if( specularDotProduct > 0.0f )
-					finalColor = finalColor + light.I * std.math.pow(specularDotProduct, 75.0f);
+				// diffuse shading
+				if( hitInfo.surfaceNormal.dot(lightVector) > 0 )
+				{
+					finalColor = finalColor + light.I * color * hitInfo.surfaceNormal.dot(lightVector);
+							
+					hitInfo.ray = -hitInfo.ray;
+					hitInfo.ray.normalize();
+					
+					// specular shading
+					Vector3 H = (lightVector + hitInfo.ray) * 0.5f; // find the half vector, H
+					
+					H.normalize();
+					
+					float specularDotProduct = dot(hitInfo.surfaceNormal, H);
+					
+					if( specularDotProduct > 0.0f )
+						finalColor = finalColor + light.I * std.math.pow(specularDotProduct, 75.0f);
+				}
+			}
+			else
+			{
+				// no color is added, shadow is shown
 			}
 		}
-		
-		if( finalColor.x > 1.0f ) finalColor.x = 1.0f;
-		if( finalColor.y > 1.0f ) finalColor.y = 1.0f;
-		if( finalColor.z > 1.0f ) finalColor.z = 1.0f;
 		
 		return finalColor;
 	}

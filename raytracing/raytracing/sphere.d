@@ -26,7 +26,7 @@ class Sphere : Surface
 		radius = _radius;
 	}
 	
-	bool hit(const Ray r, float p0, float p1, ref HitInfo hitInfo) const
+	bool hit(const Ray r, float p0, float p1, ref HitInfo hitInfo)
 	{
 		Vector3 d = r.d, e = r.e, c = center;
 		
@@ -44,6 +44,7 @@ class Sphere : Surface
 			hitInfo.hitPoint = e + d * t2;
 			hitInfo.ray = d;
 			hitInfo.surfaceNormal = (hitInfo.hitPoint - c) * 2;
+			hitInfo.hitSurface = this;
 		}
 		
 		return discriminant >= 0; // TODO: implement

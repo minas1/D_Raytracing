@@ -7,7 +7,7 @@ import raytracing.scene;
 
 abstract interface Surface
 {
-	bool hit(const Ray r, float t0, float t1, ref HitInfo hitInfo) const;
+	bool hit(const Ray r, float t0, float t1, ref HitInfo hitInfo);
 	
 	/// returns the bounding box of this surface
 	Box boundingBox() const;
@@ -21,4 +21,6 @@ struct HitInfo
 	Vector3 hitPoint; // the point where the hit happened
 	Vector3 surfaceNormal;
 	Vector3 ray; // the ray the came from the camera
+	
+	Surface hitSurface; // the surface the ray hit
 }
