@@ -62,6 +62,8 @@
     <Compile Include="raytracing\vector.d" />
     <Compile Include="raytracing\sphere.d" />
     <Compile Include="raytracing\scene.d" />
+    <Compile Include="raytracing\material.d" />
+    <Compile Include="raytracing\light.d" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="raytracing\" />

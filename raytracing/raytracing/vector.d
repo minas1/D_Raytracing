@@ -78,7 +78,7 @@ struct Vector3
 	float x, y, z;
 	
 	// negate operator
-	Vector3 opUnary(string s)() if( s == "-" )
+	Vector3 opUnary(string s)() const if( s == "-" )
 	{
 		Vector3 temp = this;
 		
@@ -90,13 +90,13 @@ struct Vector3
 	}
 	
 	// + operator for completeness
-	Vector3 opUnary(string s)() if( s == "+" )
+	Vector3 opUnary(string s)() const if( s == "+" )
 	{
 		return this;
 	}
 	
 	// binary operators
-	Vector3 opBinary(string op) (float val)
+	Vector3 opBinary(string op) (float val) const
 	{
 		static if( op == "+" )
 		{
@@ -130,7 +130,7 @@ struct Vector3
 		return temp;
 	}
 	
-	Vector3 opBinary(string op) (const ref Vector3 v) const
+	Vector3 opBinary(string op) (Vector3 v) const
 	{
 		static if( op == "+" )
 		{
@@ -145,6 +145,13 @@ struct Vector3
 			temp.x -= v.x;
 			temp.y -= v.y;
 			temp.z -= v.z;
+		}
+		static if( op == "*" )
+		{
+			Vector3 temp = this;
+			temp.x *= v.x;
+			temp.y *= v.y;
+			temp.z *= v.z;
 		}
 		
 		return temp;
@@ -237,25 +244,25 @@ struct Vector4
 }
 
 /// dot product of two Vector2 vectors
-@safe pure float dot(const ref Vector2 u, const ref Vector2 v)
+@safe pure float dot(Vector2 u, Vector2 v)
 {
 	return u.x * v.x + u.y * v.y;
 }
 
 /// dot product of two Vector3 vectors
-@safe pure float dot(const ref Vector3 u, const ref Vector3 v)
+@safe pure float dot(Vector3 u, Vector3 v)
 {
 	return u.x * v.x + u.y * v.y + u.z * v.z;
 }
 
 /// dot product of two Vector4 vectors
-@safe pure float dot(const ref Vector4 u, const ref Vector4 v)
+@safe pure float dot(Vector4 u, Vector4 v)
 {
 	return u.x * v.x + u.y * v.y + u.z * v.z + u.w * v.w;
 }
 
 /// cross product
-@safe pure Vector3 cross(const ref Vector3 u, const ref Vector3 v)
+@safe pure Vector3 cross(Vector3 u, Vector3 v)
 {
 	Vector3 w;
 	w.x = u.y * v.z - u.z * v.x;
@@ -266,19 +273,19 @@ struct Vector4
 }
 
 /// returns the length of this vector
-@safe pure float length(const ref Vector2 v)
+@safe pure float length(Vector2 v)
 {
 	return sqrt(v.x * v.x + v.y * v.y);
 }
 
 /// returns the length of this vector
-@safe pure float length(const ref Vector3 v)
+@safe pure float length(Vector3 v)
 {
 	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 /// returns the length of this vector
-@safe pure float length(const ref Vector4 v)
+@safe pure float length(Vector4 v)
 {
 	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
 }
