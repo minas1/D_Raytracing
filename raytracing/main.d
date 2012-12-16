@@ -23,6 +23,9 @@ import raytracing.material;
 import raytracing.light;
 
 import std.c.stdlib;
+import std.math;
+import std.parallelism;
+import std.random;
 
 immutable SCREEN_WIDTH = 800;
 immutable SCREEN_HEIGHT = 600;
@@ -49,54 +52,22 @@ void main()
 	srand(cast(uint)Clock.currTime.toUnixTime);
 	
 	// create the pixels array
-	auto pixels = new Vector3[SCREEN_WIDTH][SCREEN_HEIGHT];
+	auto pixels = new Vector3[SCREEN_HEIGHT][SCREEN_WIDTH];
 	Vector3 cameraPos = {0, 0, -1};
 	Vector3 cameraDirection = {0, 0, 1};
 	Vector3 upVector = {0, 1, 0};
 	
 	// create the scene
 	Scene scene;
+	makeScene1(scene);
 	
-	// create a sphere
-	Vector3 center = {-2, 0, 5};
-	Sphere s = new Sphere(center, 1);
-	s.material = new SimpleColor(154, 205, 50);
-	
-	// and another one
-	center.x = 4;
-	center.y = -1;
-	center.z = 10;
-	Sphere s3 = new Sphere(center, 1.0f);
-	s3.material = new SimpleColor(65, 145, 201);
-	
-	// and another one
-	center.x = 0;
-	center.y = 10;
-	center.z = 50;
-	Sphere s2 = new Sphere(center, 20);
-	s2.material = new SimpleColor(205, 155, 155);
-	
-	scene.objects.insert(s); // add the sphere into the scene
-	scene.objects.insert(s2);
-	scene.objects.insert(s3);
-	
-	// add lights
-	Light l = new Light();
-	l.position = Vector3(-5, 0, 0);
-	l.I = Vector3(173/255.0f, 234/255.0f, 234/255.0f); // 230;232;250
-	scene.lights.insert(l);
-	
-	l = new Light();
-	l.position = Vector3(3, 4, 0); // TODO: gives wrong colors
-	l.I = Vector3(207/255.0f, 181/255.0f, 57/255.0f);
-	scene.lights.insert(l);
-	
+	writeln("Rendering...");
 	StopWatch watch;
 	watch.start();
 	
-	for(int x = 0; x < SCREEN_WIDTH; ++x)
+	foreach(y; 0..SCREEN_HEIGHT)
 	{
-		for(int y = 0; y < SCREEN_HEIGHT; ++y)
+		foreach(x; 0..SCREEN_WIDTH)
 		{
 			//x = SCREEN_WIDTH / 2; y = SCREEN_HEIGHT / 2;
 			
@@ -113,11 +84,14 @@ void main()
 				if( color.y > 1.0f ) color.y = 1.0f;
 				if( color.z > 1.0f ) color.z = 1.0f;
 				
+				//pixels[x][y] = color;
 				writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(color.x * 255), cast(ubyte)(color.y * 255), cast(ubyte)(color.z * 255));	
 			}
 			
 			//x = y = 1000;
 		}
+		
+		SDL_Flip(screen);
 	}
 	
 	watch.stop();
@@ -194,7 +168,7 @@ class SimpleColor : Material
 					float specularDotProduct = dot(hitInfo.surfaceNormal, H);
 					
 					if( specularDotProduct > 0.0f )
-						finalColor = finalColor + light.I * std.math.pow(specularDotProduct, 75.0f);
+						finalColor = finalColor + light.I * std.math.pow(specularDotProduct, 1000.0f);
 				}
 			}
 			else
@@ -205,4 +179,118 @@ class SimpleColor : Material
 		
 		return finalColor;
 	}
+}
+
+// a surface with a diffuse component that acts as a mirror as well
+class Mirror : Material
+{
+	Vector3 color;
+	float mirrorPercentage; // percentage of the final color that comes from reflected light
+	
+	this(ubyte r, ubyte g, ubyte b, float _mirrorPercentage)
+	{
+		color.x = r / 255.0f;
+		color.y = g / 255.0f;
+		color.z = b / 255.0f;
+		
+		mirrorPercentage = _mirrorPercentage;
+	}
+	
+	Vector3 shade(HitInfo hitInfo, ref Scene scene) const
+	{
+		Vector3 finalColor = {0.0f, 0.0f, 0.0f}; // the final color
+		Vector3 normalColor = {0, 0, 0}, reflectedColor = {0, 0, 0};
+		
+		hitInfo.surfaceNormal.normalize();
+		hitInfo.ray.normalize();
+		
+		foreach(light; scene.lights)
+		{
+			Vector3 lightVector = light.position - hitInfo.hitPoint; // vector from the hit point to the light
+			lightVector.normalize();
+			
+			HitInfo hitInfo2;
+			Ray ray = {hitInfo.hitPoint, hitInfo.ray - hitInfo.surfaceNormal * 2 * dot(hitInfo.ray, hitInfo.surfaceNormal)};
+			ray.d.normalize();
+			
+			// reflected color
+			if( scene.trace(ray, hitInfo2, 0.1f) )
+			{
+				reflectedColor = reflectedColor + hitInfo2.hitSurface.shade(hitInfo2, scene);
+			}
+			
+			// "normal" color (diffuse shading)
+			if( hitInfo.surfaceNormal.dot(lightVector) > 0 )
+				normalColor = normalColor + light.I * color * hitInfo.surfaceNormal.dot(lightVector);
+		}
+		
+		//return finalColor;
+		return reflectedColor * mirrorPercentage + normalColor * (1 - mirrorPercentage);
+	}
+}
+
+void makeScene1(ref Scene scene)
+{
+	// create a sphere
+	Vector3 center = {-2, 0, 3};
+	Sphere s = new Sphere(center, 1);
+	s.material = new Mirror(154, 205, 50, 0.5f);
+	
+	// and another one
+	center.x = 4.5f;
+	center.y = 2.5f;
+	center.z = 10;
+	Sphere s3 = new Sphere(center, 1.0f);
+	s3.material = new SimpleColor(65, 145, 201);
+	
+	// and another one
+	center.x = 0;
+	center.y = 10;
+	center.z = 50;
+	Sphere s2 = new Sphere(center, 20);
+	s2.material = new SimpleColor(205, 155, 155);
+	
+	immutable SPHERES_AROUND = 50;
+	for(int i = 0; i < SPHERES_AROUND; ++i)
+	{
+		center.x = s3.center.x + s3.radius * 2.0f * sin(i * 360.0f/SPHERES_AROUND * PI / 180.0f);
+		center.y = s3.center.y + sin((45.0f + i * 360.0f/SPHERES_AROUND) * PI / 180.0f);
+		center.z = s3.center.z + s3.radius * 2.0f * cos(i * 360.0f/SPHERES_AROUND* PI / 180.0f);
+		
+		Sphere s5 = new Sphere(center, 0.05f);
+		s5.material = new SimpleColor(cast(ubyte)uniform(0, 255), cast(ubyte)uniform(0, 255), cast(ubyte)uniform(0, 255));
+		scene.objects.insert(s5);
+		
+		
+		center.x = s.center.x + s.radius * 1.5f * sin(i * 360.0f/SPHERES_AROUND * PI / 180.0f);
+		center.y = s.center.y + cos((30.0f + i * 360.0f/SPHERES_AROUND) * PI / 180.0f);
+		center.z = s.center.z + s.radius * 1.5f * cos(i * 360.0f/SPHERES_AROUND* PI / 180.0f);
+	
+		Sphere s6 = new Sphere(center, 0.05f);
+		s6.material = new SimpleColor(cast(ubyte)uniform(0, 255), cast(ubyte)uniform(0, 255), cast(ubyte)uniform(0, 255));
+		scene.objects.insert(s6);
+	}
+	
+	// mirror
+	center.x = 0;
+	center.y = -100;
+	center.z = 50;
+	Sphere s4 = new Sphere(center, 80);
+	s4.material = new Mirror(255, 255, 255, 0.8f);
+	
+	scene.objects.insert(s); // add the sphere into the scene
+	scene.objects.insert(s2);
+	scene.objects.insert(s3);
+	scene.objects.insert(s4);
+	
+	// add lights
+	Light l = new Light();
+	l.position = Vector3(-5, 0, 0);
+	l.I = Vector3(173/255.0f, 234/255.0f, 234/255.0f);
+	scene.lights.insert(l);
+	
+	l = new Light();
+	l.position = Vector3(7, 0, 0);
+	l.I = Vector3(153/255.0f, 204/255.0f, 50/255.0f);
+	scene.lights.insert(l);
 }

@@ -1,11 +1,8 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
   <MonoDevelop.Ide.Workbench ActiveDocument="raytracing/main.d">
     <Files>
-      <File FileName="raytracing/main.d" Line="101" Column="50" />
-      <File FileName="raytracing/raytracing/scene.d" Line="21" Column="51" />
-      <File FileName="raytracing/raytracing/surface.d" Line="10" Column="64" />
-      <File FileName="raytracing/raytracing/sphere.d" Line="47" Column="30" />
+      <File FileName="raytracing/main.d" Line="291" Column="2" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
