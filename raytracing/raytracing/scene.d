@@ -7,7 +7,7 @@ import raytracing.surface;
 import raytracing.light;
 
 struct Scene
-{	
+{
 	Array!Surface objects;	// objects in the scene
 	Array!Light lights;		// lights in the scene
 	
@@ -17,25 +17,22 @@ struct Scene
 		lights.reserve(lightReserveSpace);
 	}
 	
-	// TODO: complete this function
-	bool trace(Ray ray, ref HitInfo hitInfo, float t0)
+	bool trace(const ref Ray ray, ref HitInfo hitInfo, float t0)
 	{
-		//HitInfo hitInfo,
 		HitInfo	closestHitInfo;	// hitInfo of the closest object
-		Surface closestObject;	// the object that's closest
 		float t = float.max;	// the minimum t
 		
 		foreach(obj; objects)
 		{
-			if( obj.hit(ray, t0, 1000, hitInfo) && hitInfo.t < t ) // hit?
+			if( obj.hit(ray, t0, 1000, hitInfo) && hitInfo.t < t && hitInfo.t > t0) // hit?
 			{
 				t = hitInfo.t;
-				closestObject = obj;
 				closestHitInfo = hitInfo;
 			}
 		}
 		
 		hitInfo = closestHitInfo;
-		return closestObject !is null;
+		
+		return closestHitInfo.hitSurface !is null;
 	}
 }

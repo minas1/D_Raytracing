@@ -29,7 +29,6 @@
 -L-lDerelictSDL
 -L-lDerelictUtil
 -L-ldl</ExtraLinkerArguments>
-    <ExtraCompilerArguments>-g</ExtraCompilerArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release</OutputPath>
@@ -64,6 +63,8 @@
     <Compile Include="raytracing\scene.d" />
     <Compile Include="raytracing\material.d" />
     <Compile Include="raytracing\light.d" />
+    <Compile Include="raytracing\math.d" />
+    <Compile Include="raytracing\triangle.d" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="raytracing\" />

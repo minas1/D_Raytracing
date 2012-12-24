@@ -17,10 +17,12 @@ import std.datetime;
 import raytracing.vector;
 import raytracing.ray;
 import raytracing.sphere;
+import raytracing.triangle;
 import raytracing.scene;
 import raytracing.surface;
 import raytracing.material;
 import raytracing.light;
+import raytracing.math;
 
 import std.c.stdlib;
 import std.math;
@@ -35,16 +37,7 @@ import derelict.sdl.sdl;
 
 void main()
 {
-	DerelictSDL.disableAutoUnload(); // disable auto-unload because it causes seg. faults!
-	DerelictSDL.load();
-	
-	if( SDL_Init(SDL_INIT_EVERYTHING) == -1 )
-	{
-		writeln("Error! Could not initialize SDL.");
-	}
-	atexit(SDL_Quit);
-	
-	SDL_WM_SetCaption("Raytracing in D", null);
+	init(); // initialize SDL, set window caption etc.
 	
 	SDL_Surface* screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32, SDL_HWSURFACE);
 	SDL_Event event;
@@ -53,28 +46,30 @@ void main()
 	
 	// create the pixels array
 	auto pixels = new Vector3[SCREEN_HEIGHT][SCREEN_WIDTH];
-	Vector3 cameraPos = {0, 0, -1};
-	Vector3 cameraDirection = {0, 0, 1};
-	Vector3 upVector = {0, 1, 0};
+	Vector3 cameraPos = Vector3(0, 0, -1);
+	Vector3 cameraDirection = Vector3(0, 0, 1);
+	Vector3 upVector = Vector3(0, 1, 0);
 	
 	// create the scene
 	Scene scene;
-	makeScene1(scene);
+	makeScene2(scene);
 	
 	writeln("Rendering...");
 	StopWatch watch;
 	watch.start();
 	
-	foreach(y; 0..SCREEN_HEIGHT)
+	for(int y = 0; y < SCREEN_HEIGHT; ++y)
 	{
-		foreach(x; 0..SCREEN_WIDTH)
+		for(int x = 0; x < SCREEN_WIDTH; ++x)
 		{
-			//x = SCREEN_WIDTH / 2; y = SCREEN_HEIGHT / 2;
+			//x = cast(int)(SCREEN_WIDTH * 0.75f);
+			//y = cast(int)(SCREEN_HEIGHT * 0.75f) + 1;
 			
-			Vector3 p = {ASPECT_RATIO * (x - SCREEN_WIDTH * 0.5f) / (SCREEN_WIDTH * 0.5f), (y - SCREEN_HEIGHT * 0.5f) / (SCREEN_HEIGHT * 0.5f), 0};
+			Vector3 p = Vector3(ASPECT_RATIO * (x - SCREEN_WIDTH * 0.5f) / (SCREEN_WIDTH * 0.5f), (y - SCREEN_HEIGHT * 0.5f) / (SCREEN_HEIGHT * 0.5f), 0);
 			Ray r = {cameraPos, p - cameraPos};
 			
 			HitInfo hitInfo;
+			
 			bool hit = scene.trace(r, hitInfo, 0.1f);
 			
 			if( hit )
@@ -91,7 +86,7 @@ void main()
 			//x = y = 1000;
 		}
 		
-		SDL_Flip(screen);
+		//SDL_Flip(screen);
 	}
 	
 	watch.stop();
@@ -109,6 +104,21 @@ void main()
 		if( event.key.keysym.sym == SDLK_ESCAPE )
 			quit = true;
 	}
+}
+
+
+void init()
+{
+	DerelictSDL.disableAutoUnload(); // disable auto-unload because it causes seg. faults!
+	DerelictSDL.load();
+	
+	if( SDL_Init(SDL_INIT_EVERYTHING) == -1 )
+	{
+		writeln("Error! Could not initialize SDL.");
+	}
+	atexit(SDL_Quit);
+	
+	SDL_WM_SetCaption("Raytracing in D", null);
 }
 
 /// writes pixel [r, g, b] at position [x,y] of the given SDL_Surface
@@ -137,9 +147,13 @@ class SimpleColor : Material
 	
 	Vector3 shade(HitInfo hitInfo, ref Scene scene) const
 	{
-		Vector3 finalColor = {0.0f, 0.0f, 0.0f}; // the final color
+		Vector3 finalColor = Vector3(0.0f, 0.0f, 0.0f); // the final color
 		
+		// normalize the surface normal
 		hitInfo.surfaceNormal.normalize();
+		
+		hitInfo.ray = -hitInfo.ray;
+		hitInfo.ray.normalize();
 		
 		foreach(light; scene.lights)
 		{
@@ -150,25 +164,22 @@ class SimpleColor : Material
 			HitInfo hitInfo2;
 			Ray ray = {hitInfo.hitPoint, light.position - hitInfo.hitPoint};
 			ray.d.normalize();
+			
 			if( !scene.trace(ray, hitInfo2, 0.1f) )
 			{
 				// diffuse shading
 				if( hitInfo.surfaceNormal.dot(lightVector) > 0 )
 				{
 					finalColor = finalColor + light.I * color * hitInfo.surfaceNormal.dot(lightVector);
-							
-					hitInfo.ray = -hitInfo.ray;
-					hitInfo.ray.normalize();
-					
+
 					// specular shading
 					Vector3 H = (lightVector + hitInfo.ray) * 0.5f; // find the half vector, H
-					
 					H.normalize();
 					
 					float specularDotProduct = dot(hitInfo.surfaceNormal, H);
 					
 					if( specularDotProduct > 0.0f )
-						finalColor = finalColor + light.I * std.math.pow(specularDotProduct, 1000.0f);
+						finalColor = finalColor + light.I * std.math.pow(specularDotProduct, 100.0f);
 				}
 			}
 			else
@@ -198,8 +209,8 @@ class Mirror : Material
 	
 	Vector3 shade(HitInfo hitInfo, ref Scene scene) const
 	{
-		Vector3 finalColor = {0.0f, 0.0f, 0.0f}; // the final color
-		Vector3 normalColor = {0, 0, 0}, reflectedColor = {0, 0, 0};
+		Vector3 finalColor = Vector3(0.0f, 0.0f, 0.0f); // the final color
+		Vector3 normalColor = Vector3(0, 0, 0), reflectedColor = Vector3(0, 0, 0);
 		
 		hitInfo.surfaceNormal.normalize();
 		hitInfo.ray.normalize();
@@ -231,8 +242,16 @@ class Mirror : Material
 
 void makeScene1(ref Scene scene)
 {
+	Triangle triangle = new Triangle(
+	-1, 0, 8,
+	0, 1, 8,
+	1, 0, 8
+	);
+	triangle.material = new SimpleColor(255, 255, 255);
+	scene.objects.insert(triangle);
+	
 	// create a sphere
-	Vector3 center = {-2, 0, 3};
+	Vector3 center = Vector3(-2, 0, 3);
 	Sphere s = new Sphere(center, 1);
 	s.material = new Mirror(154, 205, 50, 0.5f);
 	
@@ -251,7 +270,7 @@ void makeScene1(ref Scene scene)
 	s2.material = new SimpleColor(205, 155, 155);
 	
 	immutable SPHERES_AROUND = 50;
-	for(int i = 0; i < SPHERES_AROUND; ++i)
+	/*for(int i = 0; i < SPHERES_AROUND; ++i)
 	{
 		center.x = s3.center.x + s3.radius * 2.0f * sin(i * 360.0f/SPHERES_AROUND * PI / 180.0f);
 		center.y = s3.center.y + sin((45.0f + i * 360.0f/SPHERES_AROUND) * PI / 180.0f);
@@ -269,7 +288,7 @@ void makeScene1(ref Scene scene)
 		Sphere s6 = new Sphere(center, 0.05f);
 		s6.material = new SimpleColor(cast(ubyte)uniform(0, 255), cast(ubyte)uniform(0, 255), cast(ubyte)uniform(0, 255));
 		scene.objects.insert(s6);
-	}
+	}*/
 	
 	// mirror
 	center.x = 0;
@@ -293,4 +312,38 @@ void makeScene1(ref Scene scene)
 	l.position = Vector3(7, 0, 0);
 	l.I = Vector3(153/255.0f, 204/255.0f, 50/255.0f);
 	scene.lights.insert(l);
+	
+}
+
+void makeScene2(ref Scene scene)
+{
+	Triangle triangle = new Triangle(
+	-1, -2, 5,
+	0, 4, 5,
+	7, 4, 5
+	);
+	triangle.material = new SimpleColor(255, 255, 255);
+	scene.objects.insert(triangle);
+	
+	Sphere sphere = new Sphere();
+	sphere.center.x = 0;
+	sphere.center.y = 0;
+	sphere.center.z = 4;
+	sphere.radius = 1;
+	sphere.material = new SimpleColor(255, 0, 0);
+	scene.objects.insert(sphere);
+	
+	// right light
+	Light l = new Light();
+	l.position = Vector3(7, 0, 0);
+	l.I = Vector3(153/255.0f, 204/255.0f, 50/255.0f);
+	scene.lights.insert(l);
+	
+	// left light
+	l = new Light();
+	l.position = Vector3(-5, 0, 0);
+	l.I = Vector3(173/255.0f, 234/255.0f, 234/255.0f);
+	scene.lights.insert(l);
+	
+	
 }

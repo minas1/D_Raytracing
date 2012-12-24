@@ -26,7 +26,7 @@ class Sphere : Surface
 		radius = _radius;
 	}
 	
-	bool hit(const Ray r, float p0, float p1, ref HitInfo hitInfo)
+	bool hit(const ref Ray r, float p0, float p1, ref HitInfo hitInfo)
 	{
 		Vector3 d = r.d, e = r.e, c = center;
 		
@@ -52,8 +52,8 @@ class Sphere : Surface
 	
 	Box boundingBox() const
 	{
-		Vector3 min = {center.x - radius * 0.5f, center.y - radius * 0.5f, center.z - radius * 0.5f};
-		Vector3 max = {center.x + radius * 0.5f, center.y + radius * 0.5f, center.z + radius * 0.5f};
+		Vector3 min = Vector3(center.x - radius * 0.5f, center.y - radius * 0.5f, center.z - radius * 0.5f);
+		Vector3 max = Vector3(center.x + radius * 0.5f, center.y + radius * 0.5f, center.z + radius * 0.5f);
 		
 		Box b = {min, max};
 		

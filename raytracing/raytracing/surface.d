@@ -7,7 +7,7 @@ import raytracing.scene;
 
 abstract interface Surface
 {
-	bool hit(const Ray r, float t0, float t1, ref HitInfo hitInfo);
+	bool hit(const ref Ray r, float t0, float t1, ref HitInfo hitInfo);
 	
 	/// returns the bounding box of this surface
 	Box boundingBox() const;

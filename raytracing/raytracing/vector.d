@@ -6,6 +6,20 @@ struct Vector2
 {
 	float x, y;
 	
+	this(float _x, float _y)
+	{
+		x = _y;
+		y = _y;
+	}
+	
+	this(this)
+	{
+		x = x;
+		y = y;
+		
+		std.stdio.writeln("Copy constructor");
+	}
+	
 	// negate operator
 	Vector2 opUnary(string s)() if( s == "-" )
 	{
@@ -76,6 +90,13 @@ struct Vector2
 struct Vector3
 {
 	float x, y, z;
+	
+	this(float _x, float _y, float _z)
+	{
+		x = _x;
+		y = _y;
+		z = _z;
+	}
 	
 	// negate operator
 	Vector3 opUnary(string s)() const if( s == "-" )
@@ -161,6 +182,14 @@ struct Vector3
 struct Vector4
 {
 	float x, y, z, w;
+	
+	this(float _x, float _y, float _z, float _w)
+	{
+		x = _x;
+		y = _y;
+		z = _z;
+		w = _w;
+	}
 	
 	// negate operator
 	Vector4 opUnary(string s)() if( s == "-" )
@@ -262,30 +291,31 @@ struct Vector4
 }
 
 /// cross product
-@safe pure Vector3 cross(Vector3 u, Vector3 v)
+@safe pure Vector3 cross(Vector3 a, Vector3 b)
 {
-	Vector3 w;
-	w.x = u.y * v.z - u.z * v.x;
-	w.y = u.z * v.x - u.x * v.z;
-	w.z = u.x * v.y - u.y * v.x;
+	Vector3 w = void;
+	
+	w.x = a.y * b.z - a.z * b.y;
+	w.y = a.z * b.x - a.x * b.z;
+	w.z = a.x * b.y - a.y * b.x;
 	
 	return w;
 }
 
 /// returns the length of this vector
-@safe pure float length(Vector2 v)
+@safe pure float length(const ref Vector2 v)
 {
 	return sqrt(v.x * v.x + v.y * v.y);
 }
 
 /// returns the length of this vector
-@safe pure float length(Vector3 v)
+@safe pure float length(const ref Vector3 v)
 {
 	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 /// returns the length of this vector
-@safe pure float length(Vector4 v)
+@safe pure float length(const ref Vector4 v)
 {
 	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
 }
