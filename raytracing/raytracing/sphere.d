@@ -26,15 +26,26 @@ class Sphere : Surface
 		radius = _radius;
 	}
 	
+	this(float cX, float cY, float cZ, float _radius)
+	{
+		center.x = cX;
+		center.y = cY;
+		center.z = cZ;
+		
+		radius = _radius;
+	}
+	
 	bool hit(const ref Ray r, float p0, float p1, ref HitInfo hitInfo)
 	{
 		Vector3 d = r.d, e = r.e, c = center;
+		Vector3 eMinusC = e-c;
 		
-		float discriminant = dot(d, e-c) * dot(d, e-c) - dot(d, d) * (dot(e-c, e-c) - radius * radius);
+		float discriminant = dot(d, eMinusC) * dot(d, eMinusC) - dot(d, d) * (dot(eMinusC, eMinusC) - radius * radius);
 		if( discriminant >= 0 )
 		{
+			const Vector3 minusD = -d;
 			//float t1 = (dot(-d, e-c) + sqrt(discriminant)) / dot(d, d);
-			float t2 = (dot(-d, e-c) - sqrt(discriminant)) / dot(d, d);
+			float t2 = (dot(minusD, eMinusC) - sqrt(discriminant)) / dot(d, d);
 			
 			// TODO: don't forget to change this if needed
 			if( t2 < p0 || t2 > p1 )
@@ -52,15 +63,15 @@ class Sphere : Surface
 	
 	Box boundingBox() const
 	{
-		Vector3 min = Vector3(center.x - radius * 0.5f, center.y - radius * 0.5f, center.z - radius * 0.5f);
-		Vector3 max = Vector3(center.x + radius * 0.5f, center.y + radius * 0.5f, center.z + radius * 0.5f);
+		Vector3 min = Vector3(center.x - radius, center.y - radius, center.z - radius);
+		Vector3 max = Vector3(center.x + radius, center.y + radius, center.z + radius);
 		
 		Box b = {min, max};
 		
 		return b;
 	}
 	
-	Vector3 shade(HitInfo hitInfo, ref Scene scene) const
+	Vector3 shade(const ref HitInfo hitInfo, ref Scene scene) const
 	{
 		return material.shade(hitInfo, scene);
 	}

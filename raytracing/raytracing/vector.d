@@ -12,14 +12,6 @@ struct Vector2
 		y = _y;
 	}
 	
-	this(this)
-	{
-		x = x;
-		y = y;
-		
-		std.stdio.writeln("Copy constructor");
-	}
-	
 	// negate operator
 	Vector2 opUnary(string s)() if( s == "-" )
 	{
@@ -160,14 +152,14 @@ struct Vector3
 			temp.y += v.y;
 			temp.z += v.z;
 		}
-		static if( op == "-" )
+		else static if( op == "-" )
 		{
 			Vector3 temp = this;
 			temp.x -= v.x;
 			temp.y -= v.y;
 			temp.z -= v.z;
 		}
-		static if( op == "*" )
+		else static if( op == "*" )
 		{
 			Vector3 temp = this;
 			temp.x *= v.x;
@@ -273,25 +265,25 @@ struct Vector4
 }
 
 /// dot product of two Vector2 vectors
-@safe pure float dot(Vector2 u, Vector2 v)
+@safe pure float dot(const ref Vector2 u, const ref Vector2 v)
 {
 	return u.x * v.x + u.y * v.y;
 }
 
 /// dot product of two Vector3 vectors
-@safe pure float dot(Vector3 u, Vector3 v)
+@safe pure float dot(const ref Vector3 u, const ref Vector3 v)
 {
 	return u.x * v.x + u.y * v.y + u.z * v.z;
 }
 
 /// dot product of two Vector4 vectors
-@safe pure float dot(Vector4 u, Vector4 v)
+@safe pure float dot(const ref Vector4 u, const ref Vector4 v)
 {
 	return u.x * v.x + u.y * v.y + u.z * v.z + u.w * v.w;
 }
 
 /// cross product
-@safe pure Vector3 cross(Vector3 a, Vector3 b)
+@safe pure Vector3 cross(const ref Vector3 a, const ref Vector3 b)
 {
 	Vector3 w = void;
 	

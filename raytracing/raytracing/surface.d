@@ -12,7 +12,7 @@ abstract interface Surface
 	/// returns the bounding box of this surface
 	Box boundingBox() const;
 	
-	Vector3 shade(HitInfo hitInfo, ref Scene scene) const;
+	Vector3 shade(const ref HitInfo hitInfo, ref Scene scene) const;
 }
 
 struct HitInfo
