@@ -193,7 +193,7 @@ void main()
 	Vector3 upVector = Vector3(0, 1, 0);
 	
 	// create the scene
-	Scene scene;
+	Scene scene = Scene();
 	makeScene2(scene);
 	
 	scene.preCalc();
@@ -247,7 +247,9 @@ void main()
 	
 	watch.stop();
 	writeln(watch.peek().nsecs / 1_000_000_100.0, " s");
-	
+
+	//writeln("# of lights = ", scene.lights.length);
+		
 	SDL_Flip(screen); // update the screen
 
 	bool quit = false;
@@ -426,7 +428,7 @@ void makeScene2(ref Scene scene)
 	scene.objects.insert(floor);
 	
 		
-	/++Mesh mesh = loadMesh("../Models/torus.obj");
+	/*Mesh mesh = loadMesh("../Models/torus.obj");
 	Material meshMat = new SimpleColor(Vector3(0, 0, 0), Vector3(0.0f, 1.0f, 1.0f), Vector3(1, 1, 1), 100);
 	foreach(t; mesh.triangles)
 	{
@@ -441,7 +443,7 @@ void makeScene2(ref Scene scene)
 		t.c.z += 95;
 		
 		scene.objects.insert(t);
-	}++/
+	}*/
 	
 	float angle = 0;
 	for(int i = 0; i < 200; ++i)
@@ -467,16 +469,15 @@ void makeScene2(ref Scene scene)
 	s.material = new SimpleColor(Vector3(0, 0, 0), Vector3(173/255.0f, 234/255.0f, 234/255.0f), Vector3(1, 1, 1), 500);
 	scene.objects.insert(s);
 	
+	
 	// top light
 	Light l;
 	
-	l = new Light();
 	l.position = Vector3(0, 100, 200);
 	l.I = Vector3(173/255.0f, 234/255.0f, 234/255.0f);
 	scene.lights.insert(l);
 	
 	// left light
-	l = new Light();
 	l.position = Vector3(-80, 0, 0);
 	l.I = Vector3(1, 1, 1);
 	scene.lights.insert(l);

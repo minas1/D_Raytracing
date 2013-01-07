@@ -17,10 +17,15 @@ struct Scene
 {
 	Array!Surface objects;	// objects in the scene
 	Array!Light lights;		// lights in the scene
+	//Light[] lights;
 	
 	Cell[] grid; // used for uniform space partitioning
 	
-	this(size_t objectReserveSpace = 10, size_t lightReserveSpace = 3)
+	Cell[][][] grid2; // TODO: use this to not check all grids
+	
+	@disable this(); // disable the default constructor because space needs to be reserved for objects and lights
+	
+	this(size_t objectReserveSpace = 20, size_t lightReserveSpace = 3)
 	{
 		objects.reserve(objectReserveSpace);
 		lights.reserve(lightReserveSpace);
@@ -32,6 +37,7 @@ struct Scene
 		closestHitInfo.t = float.max;
 		
 		traceUsingUSP(ray, hitInfo, t0, closestHitInfo);
+		//traceAll(ray, hitInfo, t0, closestHitInfo);
 		
 		hitInfo = closestHitInfo;
 		
@@ -54,6 +60,22 @@ struct Scene
 	/// trace rays using uniform space partitioning data structure
 	private void traceUsingUSP(const ref Ray ray, ref HitInfo hitInfo, float t0, ref HitInfo closestHitInfo)
 	{
+		/++for(int i = 0; i < grid2.length; ++i)
+		{
+			for(int j = 0; j < grid2[i].length; ++j)
+			{
+				for(int k = 0; k < grid2[i][j].length; ++k)
+				{
+					if( i == 0 || j == 0 || k == 0 || i == grid2.length - 1 || j == grid2[i].length - 1 || k == grid2[i][j].length - 1)
+					{
+						if( grid2[i][j][k].box.intersects(ray) )
+							std.stdio.writefln("Intersection @ %s, %s, %s", i, j, k);
+					}
+				}
+			}
+		}
+		std.stdio.readln();++/
+		
 		for(int i = 0; i < grid.length; ++i)
 		{
 			if( grid[i].box.intersects(ray) )
@@ -103,7 +125,7 @@ struct Scene
 		}
 		
 		avgVol /= surfaces.length;
-		float GRID_SIZE = avgVol * 30;
+		float GRID_SIZE = avgVol * 10;
 		
 		writeln("The scene has ", surfaces.length, " objects.");
 		
@@ -175,6 +197,8 @@ struct Scene
 		writeln("There are ", dimX * dimY * dimZ - empty, " non-empty cells.");
 		writeln("Maximum objects in a cell: ", maxObjects);
 		writeln("Average objects per cell (empty cells not included): ", cast(float)(total-empty) / (dimX * dimY * dimZ-empty));
+		
+		grid2 = grid;
 		
 		Cell[] nonEmpty = new Cell[dimX * dimY * dimZ - empty];
 		int index = 0;

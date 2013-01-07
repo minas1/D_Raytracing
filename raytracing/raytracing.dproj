@@ -29,6 +29,7 @@
 -L-lDerelictSDL
 -L-lDerelictUtil
 -L-ldl</ExtraLinkerArguments>
+    <ExtraCompilerArguments>-gc</ExtraCompilerArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release</OutputPath>
