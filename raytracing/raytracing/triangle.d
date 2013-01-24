@@ -45,7 +45,7 @@ class Triangle : Surface
 		c.z = cZ;
 	}
 	
-	bool hit(const ref Ray r, float p0, float p1, ref HitInfo hitInfo)
+	override bool hit(const ref Ray r, float p0, float p1, ref HitInfo hitInfo)
 	{
 		// (e + td - a) . n = 0
 		// ... t(d.n) + e.n - a.n = 0
@@ -120,10 +120,13 @@ class Triangle : Surface
 		hitInfo.surfaceNormal = n;
 		hitInfo.hitSurface = this;
 		
+		//import std.stdio;
+		//writeln("in triangle hit");
+		
 		return true;
 	}
 	
-	Box boundingBox() const
+	override Box boundingBox() const
 	{
 		Box box = void;
 		
@@ -133,8 +136,12 @@ class Triangle : Surface
 		return box;
 	}
 	
-	Vector3 shade(const ref HitInfo hitInfo, ref Scene scene) const
+	override Vector3 shade(const ref HitInfo hitInfo, ref Scene scene) const
 	{
+		//import std.stdio;
+		//writeln("in Triangle.shade()");
+		//writeln("surface normal = ", hitInfo.surfaceNormal);
+		
 		return material.shade(hitInfo, scene);
 	}
 }

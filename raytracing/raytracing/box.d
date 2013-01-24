@@ -2,9 +2,9 @@ module raytracing.box;
 
 import raytracing.vector;
 import raytracing.ray;
-import raytracing.surface;
 
 import std.stdio;
+import std.algorithm;
 
 struct Box
 {
@@ -68,4 +68,13 @@ struct Box
 		
 		return true;
 	}
+}
+
+Box combine(const ref Box b1, const ref Box b2)
+{
+	Box box = {
+			Vector3(min(b1.min.x, b2.min.x), min(b1.min.y, b2.min.y), min(b1.min.z, b2.min.z)),
+			Vector3(max(b1.max.x, b2.max.x), max(b1.max.y, b2.max.y), max(b1.max.z, b2.max.z))};
+	
+	return box;
 }

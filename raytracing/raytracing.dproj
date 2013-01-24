@@ -68,6 +68,7 @@
     <Compile Include="raytracing\triangle.d" />
     <Compile Include="raytracing\mesh.d" />
     <Compile Include="raytracing\meshloader.d" />
+    <Compile Include="raytracing\bvh.d" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="raytracing\" />

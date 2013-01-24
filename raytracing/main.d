@@ -1,8 +1,9 @@
 /*
  * TODO:
- * a) Make the loop parallel - find where the problem is and it crashes
- * b) make a Mesh object
- * c) Make a .obj loader -- study the file format, see examples from Blender
+ * 
+ * 1) When finished with BVH, make Surface into an interface (it is abstract class now)
+ * 2) Make BVH.hit() non-recursive
+ * 3) when the torus is enabled, segmentation fault in scene.preCalc()
  */
 
 import std.stdio;
@@ -19,6 +20,7 @@ import raytracing.light;
 import raytracing.math;
 import raytracing.meshloader;
 import raytracing.box;
+import raytracing.bvh;
 
 import std.c.stdlib;
 import std.math;
@@ -27,155 +29,71 @@ import std.random;
 import core.sync.semaphore;
 import std.algorithm;
 
+import derelict.sdl.sdl;
+
 immutable SCREEN_WIDTH = 800;
 immutable SCREEN_HEIGHT = 600;
 immutable ASPECT_RATIO = SCREEN_WIDTH / cast(float)SCREEN_HEIGHT;
 
-import derelict.sdl.sdl;
-
-/++struct Cell
+void printBVH(Surface root, int i = 0, string str = "")
 {
-	std.container.Array!Surface surfaces;
-	Box box;
+	if( root is null )
+		return;
+	
+	writeln("------PRINT()------");
+	writeln("icy");//writeln(root.boundingBox());
+	writeln("name = ", root.name, " depth = ", i, " [", str, "]");
+	writeln("------~~~~~~~------\n");
+	
+	if( (cast(BVHNode)root) !is null )
+	{
+		printBVH((cast(BVHNode)(root)).left, i+1, "left");
+		printBVH((cast(BVHNode)(root)).right, i+1, "right");
+	}
 }
 
-void g(ref std.container.Array!Surface surfaces)
-{	
-	Vector3 min = Vector3(float.max, float.max, float.max),
-			max = Vector3(-float.infinity, -float.infinity, -float.infinity);
+void f()
+{
+	Surface[] s = new Surface[3];
+	s[0] = new Sphere(0, 0, 0, 1);
+	s[0].name = "s0";
 	
-	float avgVol = 0;
+	s[1] = new Sphere(10, 0, 0, 1);
+	s[1].name = "s1";
 	
-	// find the minimum and maximum points
-	foreach(obj; surfaces)
+	s[2] = new Sphere(20, 0, 0, 1);
+	s[2].name = "s2";
+	
+	//s[3] = new Sphere(30, 0, 0, 1);
+	//s[3].name = "s3";
+	
+	printBVH(createBVHTree2(s));
+}
+
+void g(Scene scene)
+{
+	writeln("Surface[] surfaces = new Surface[", scene.objects.length, "];\n");
+	
+	for(auto i = 0UL; i < scene.objects.length; ++i)
 	{
-		Box box = obj.boundingBox();
+		Surface o = scene.objects[i];
 		
-		min.x = std.algorithm.min(min.x, box.min.x);
-		min.y = std.algorithm.min(min.y, box.min.y);
-		min.z = std.algorithm.min(min.z, box.min.z);
-		
-		max.x = std.algorithm.max(max.x, box.max.x);
-		max.y = std.algorithm.max(max.y, box.max.y);
-		max.z = std.algorithm.max(max.z, box.max.z);
-		
-	
-		avgVol += std.algorithm.max(abs(box.max.x - box.min.x), abs(box.max.y - box.min.y), abs(box.max.z - box.min.z));
-	}
-	
-	avgVol /= surfaces.length;
-	float GRID_SIZE = avgVol * 8;
-	
-	writeln("The scene has ", surfaces.length, " objects.");
-	
-	writeln("min = ", min, "\nmax = ", max);
-	writeln("\nx axis needs ", ceil((max.x - min.x)/GRID_SIZE));
-	writeln("y axis needs ", ceil((max.y - min.y)/GRID_SIZE));
-	writeln("z axis needs ", ceil((max.z - min.z)/GRID_SIZE));
-	
-	int dimX = cast(int)ceil((max.x - min.x)/GRID_SIZE);
-	int dimY = cast(int)ceil((max.y - min.y)/GRID_SIZE);
-	int dimZ = cast(int)ceil((max.z - min.z)/GRID_SIZE);
-	
-	writeln("\nWith grid size of ", GRID_SIZE, " we need: ", dimX * dimY * dimZ);
-	
-	auto grid = new Cell[][][](dimX, dimY, dimZ);
-	
-	// set the position of the bounding boxes
-	for(int i = 0; i < dimX; ++i)
-	{
-		for(int j = 0; j < dimY; ++j)
+		if( cast(Sphere)o !is null ) // if it's a sphere
 		{
-			for(int k = 0; k < dimZ; ++k)
-			{
-				grid[i][j][k].box.min.x = min.x + i * GRID_SIZE;
-				grid[i][j][k].box.min.y = min.y + j * GRID_SIZE;
-				grid[i][j][k].box.min.z = min.z + k * GRID_SIZE;
-				
-				grid[i][j][k].box.max.x = grid[i][j][k].box.min.x + GRID_SIZE;
-				grid[i][j][k].box.max.y = grid[i][j][k].box.min.y + GRID_SIZE;
-				grid[i][j][k].box.max.z = grid[i][j][k].box.min.z + GRID_SIZE;
-				
-				Box box1 = grid[i][j][k].box;
-				
-				//writeln("Testing grid[", i, "][", j, "][", k, "]");
-				//writeln("from ", box1.min, " to\t", box1.max);
-				
-				// put the Surfaces into the boxes
-				foreach(obj; surfaces)
-				{
-					//writeln("\tTesting obj with center at ", (cast(Sphere)obj).center);
-					
-					Box box2 = obj.boundingBox();
-					//writeln("\tobj bbox = from ", box2.min, " to ", box2.max);
-					
-					Vector3 v[8];
-					
-					v[0] = Vector3(box2.min.x, box2.min.y, box2.min.z);
-					v[1] = Vector3(box2.min.x, box2.min.y, box2.max.z);
-					v[2] = Vector3(box2.min.x, box2.max.y, box2.min.z);
-					v[3] = Vector3(box2.min.x, box2.max.y, box2.max.z);
-					v[4] = Vector3(box2.max.x, box2.min.y, box2.min.z);
-					v[5] = Vector3(box2.max.x, box2.min.y, box2.max.z);
-					v[6] = Vector3(box2.max.x, box2.max.y, box2.min.z);
-					v[7] = Vector3(box2.max.x, box2.max.y, box2.max.z);
-					
-					// if one point of the surface's bbox is inside the cell, put it in the list
-					for(int l = 0; l < 8; ++l)
-					{
-						bool b = box1.isPointInside(v[l]);
-						//writeln("\tTesting point at ", v[l], "... ", b);
-						
-						if( b )
-						{
-							grid[i][j][k].surfaces.insert(obj);
-							//writeln("\tYes!");
-							break;
-						}
-					}
-					
-					// if all of the points are outside, it means that the cell is inside the surface's bounding box
-					// so add it to the list as well
-					
-					if( box2.min.x < box1.min.x && box2.min.y < box1.min.y && box2.min.z < box1.min.z
-					&&  box2.max.x > box1.max.x && box2.max.y > box1.max.y && box2.max.z > box1.max.z )
-						grid[i][j][k].surfaces.insert(obj);
-				}
-			}
+			Sphere s = cast(Sphere)o;
+			writeln("surfaces[", i, "] = new Sphere(", s.center.x, "f, ", s.center.y, "f, ", s.center.z, "f, ", s.radius, "f);");
+		}
+		else if( cast(Triangle)o !is null ) // if it's a triangle
+		{
+			Triangle t = cast(Triangle)o;
+			writefln("surfaces[%s] = new Triangle(%sf, %sf, %sf, %sf, %sf, %sf, %sf, %sf, %sf);", i, t.a.x, t.a.y, t.a.z, t.b.x, t.b.y, t.b.z, t.c.x, t.c.y, t.c.z);
+		}
+		else
+		{
+			writeln("NULL");
 		}
 	}
-	
-	//writeln();
-	
-	// print
-	ulong empty;
-	ulong total;
-	ulong maxObjects = ulong.min;
-	for(int i = 0; i < dimX; ++i)
-	{
-		for(int j = 0; j < dimY; ++j)
-		{
-			for(int k = 0; k < dimZ; ++k)
-			{
-				/*writeln("Printing box ", i, ".", j, ".", k, " from ", grid[i][j][k].box.min, ", to ", grid[i][j][k].box.max);
-				foreach(obj; grid[i][j][k].surfaces)
-				{
-					writeln((cast(Sphere)obj).center);
-				}
-				writeln();*/
-				if( grid[i][j][k].surfaces.length == 0 )
-					++empty;
-				
-				total += grid[i][j][k].surfaces.length;
-				maxObjects = std.algorithm.max(maxObjects, grid[i][j][k].surfaces.length);
-			}
-		}
-	}
-	
-	writeln("There are ", dimX * dimY * dimZ - empty, " non-empty cells.");
-	writeln("Maximum objects in a cell: ", maxObjects);
-	writeln("Average objects per cell (empty cells not included): ", cast(float)(total-empty) / (dimX * dimY * dimZ-empty));
-}++/
+}
 
 void main()
 {
@@ -193,32 +111,45 @@ void main()
 	Vector3 upVector = Vector3(0, 1, 0);
 	
 	// create the scene
-	Scene scene = Scene();
+	Scene scene = Scene(20, 3);
 	makeScene2(scene);
 	
 	scene.preCalc();
+	printBVH(scene.root);
 	
 	writeln("The scene has ", scene.objects.length, " triangles.");
 	writeln("Rendering...");
 	StopWatch watch;
 	watch.start();
 	
-	int[] ys = new int[SCREEN_HEIGHT];
+	/++int[] ys = new int[SCREEN_HEIGHT];
 	for(int i = 0; i < ys.length; ++i)
 		ys[i] = i;
-		
 	
-	Semaphore sema = new Semaphore(1);
-	foreach(y; parallel(ys))
+	//print(scene.root); writeln();
+	
+	//int x, y;
+	Semaphore sema = new Semaphore(1);++/
+	
+	//foreach(y; parallel(ys))++/
+	for(int y = 0; y < SCREEN_HEIGHT; ++y)
 	{
+		//y = 361;
+		
 		for(int x = 0; x < SCREEN_WIDTH; ++x)
 		{
+			//x = 397;
+			
 			Vector3 p = Vector3(ASPECT_RATIO * (x - SCREEN_WIDTH * 0.5f) / (SCREEN_WIDTH * 0.5f), (y - SCREEN_HEIGHT * 0.5f) / (SCREEN_HEIGHT * 0.5f), 0);
 			Ray r = {cameraPos, p - cameraPos};
 			
 			HitInfo hitInfo = void;
 			
+			//writeln("Ready to get into scene.trace()");
 			bool hit = scene.trace(r, hitInfo, 0.1f);
+			//writeln("Exited scene.trace()");
+			
+			//writeln("hit = ", hit);
 			
 			if( hit )
 			{
@@ -228,28 +159,30 @@ void main()
 				if( color.y > 1.0f ) color.y = 1.0f;
 				if( color.z > 1.0f ) color.z = 1.0f;
 				
-				sema.wait();
+				//sema.wait();
 				writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(color.x * 255), cast(ubyte)(color.y * 255), cast(ubyte)(color.z * 255));	
-				sema.notify();
+				//sema.notify();
 			}
 			else
 			{
-				sema.wait();
+				//sema.wait();
 				writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(0.5f * 255), cast(ubyte)(0.5f * 255), cast(ubyte)(0.5f * 255));	
-				sema.notify();
+				//sema.notify();
 			}
 			
+			//y = 10000;
+			//break;
+			//writeln("...Finished\n");
 		}
-		sema.wait();
-		SDL_Flip(screen);
-		sema.notify();
+		//sema.wait();
+		//SDL_Flip(screen);
+		//sema.notify();
+		
 	}
 	
 	watch.stop();
 	writeln(watch.peek().nsecs / 1_000_000_100.0, " s");
-
-	//writeln("# of lights = ", scene.lights.length);
-		
+	
 	SDL_Flip(screen); // update the screen
 
 	bool quit = false;
@@ -313,10 +246,10 @@ class SimpleColor : Material
 		Vector3 finalColor = ka; // the final color
 		
 		Vector3 n = _hitInfo.surfaceNormal;
-		n.normalize();
+		normalize(n);
 		
 		Vector3 hitRay = -_hitInfo.ray;
-		hitRay.normalize();
+		normalize(hitRay);
 		
 		Vector3 hitPoint = _hitInfo.hitPoint;
 		
@@ -332,22 +265,22 @@ class SimpleColor : Material
 			
 			Vector3 lightVector = light.position - hitPoint; // vector from the hit point to the light
 		
-			lightVector.normalize();
+			normalize(lightVector);
 			
 			HitInfo hitInfo2;
 			Ray ray = {hitPoint, light.position - hitPoint};
-			ray.d.normalize();
+			normalize(ray.d);
 			
-			if( !scene.trace(ray, hitInfo2, 0.1f) )
+			//if( !scene.trace(ray, hitInfo2, 0.1f) )
 			{
 				// diffuse shading
-				if( n.dot(lightVector) > 0 )
+				if( dot(n, lightVector) > 0 )
 				{
-					finalColor = finalColor + light.I * kd * n.dot(lightVector);
+					finalColor = finalColor + light.I * kd * dot(n, lightVector);
 
 					// specular shading
 					Vector3 H = (lightVector + hitRay) * 0.5f; // find the half vector, H
-					H.normalize();
+					normalize(H);
 					
 					float specularDotProduct = dot(n, H);
 					
@@ -355,10 +288,10 @@ class SimpleColor : Material
 						finalColor = finalColor + light.I * ks * std.math.pow(specularDotProduct, specularComponent);
 				}
 			}
-			else
+			/++else
 			{
 				// no color is added, shadow is shown
-			}
+			}++/
 		}
 		
 		return finalColor;
@@ -426,9 +359,9 @@ void makeScene2(ref Scene scene)
 	
 	floor.material = new SimpleColor(Vector3(0, 0, 0), Vector3(1, 1, 1), Vector3(0, 0, 0), 10);
 	scene.objects.insert(floor);
+	floor.name = "floor";
 	
-		
-	/*Mesh mesh = loadMesh("../Models/torus.obj");
+	Mesh mesh = loadMesh("../Models/torus.obj");
 	Material meshMat = new SimpleColor(Vector3(0, 0, 0), Vector3(0.0f, 1.0f, 1.0f), Vector3(1, 1, 1), 100);
 	foreach(t; mesh.triangles)
 	{
@@ -443,13 +376,15 @@ void makeScene2(ref Scene scene)
 		t.c.z += 95;
 		
 		scene.objects.insert(t);
-	}*/
+	}
 	
 	float angle = 0;
+	Sphere s;
 	for(int i = 0; i < 200; ++i)
 	{
+		
 		Vector3 center = Vector3(-120 + i * 5, 10 + 10 * sin(angle * PI / 180), 10 + i * 3);
-		Sphere s = new Sphere(center, 2);
+		s = new Sphere(center, 2);
 		s.material = new SimpleColor(Vector3(0, 0, 0), Vector3(1-i/200.0f, 1, 0.5f), Vector3(1, 1, 1), uniform(10.0f, 100));
 		scene.objects.insert(s);
 		
@@ -462,13 +397,16 @@ void makeScene2(ref Scene scene)
 			angle += 8.0f;
 			s.center.x -= 8 * (i-50);
 		}
+		s.name = "INVISIBLE";
+		
+		//break;
 	}
 	
 	Vector3 center = Vector3(0, 10, 95);
-	Sphere s = new Sphere(center, 10);
-	s.material = new SimpleColor(Vector3(0, 0, 0), Vector3(173/255.0f, 234/255.0f, 234/255.0f), Vector3(1, 1, 1), 500);
-	scene.objects.insert(s);
-	
+	Sphere s2 = new Sphere(center, 10);
+	s2.material = new SimpleColor(Vector3(0, 0, 0), Vector3(173/255.0f, 234/255.0f, 234/255.0f), Vector3(1, 1, 1), 100);
+	scene.objects.insert(s2);
+	s2.name = "visible";
 	
 	// top light
 	Light l;
@@ -478,7 +416,7 @@ void makeScene2(ref Scene scene)
 	scene.lights.insert(l);
 	
 	// left light
-	l.position = Vector3(-80, 0, 0);
+	l.position = Vector3(-30, 0, 0);
 	l.I = Vector3(1, 1, 1);
 	scene.lights.insert(l);
 }
