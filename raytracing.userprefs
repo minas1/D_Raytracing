@@ -1,9 +1,9 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="raytracing/raytracing/bvh.d">
+  <MonoDevelop.Ide.Workbench ActiveDocument="raytracing/main.d">
     <Files>
-      <File FileName="raytracing/main.d" Line="38" Column="1" />
-      <File FileName="raytracing/raytracing/bvh.d" Line="197" Column="2" />
+      <File FileName="raytracing/main.d" Line="41" Column="10" />
+      <File FileName="raytracing/raytracing/bvh.d" Line="183" Column="16" />
       <File FileName="raytracing/raytracing/scene.d" Line="71" Column="3" />
       <File FileName="raytracing/raytracing/box.d" Line="68" Column="3" />
       <File FileName="raytracing/raytracing/triangle.d" Line="132" Column="3" />
@@ -14,9 +14,8 @@
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="raytracing" expanded="True">
-            <Node name="raytracing" expanded="True">
-              <Node name="bvh.d" selected="True" />
-            </Node>
+            <Node name="raytracing" expanded="True" />
+            <Node name="main.d" selected="True" />
           </Node>
         </State>
       </Pad>

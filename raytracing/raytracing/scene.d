@@ -8,18 +8,12 @@ import raytracing.light;
 import raytracing.box;
 import raytracing.bvh;
 
-struct Cell
-{
-	std.container.Array!Surface surfaces;
-	Box box;
-}
-
 struct Scene
 {
 	Array!Surface objects;	// objects in the scene
 	Array!Light lights;		// lights in the scene
 	
-	/*private*/ BVHNode root;			// root node of the BVH tree
+	private BVHNode root;			// root node of the BVH tree
 	
 	@disable this(); // disable the default constructor because space needs to be reserved for objects and lights
 	
@@ -35,7 +29,7 @@ struct Scene
 		closestHitInfo.t = float.max;
 
 		root.hit(ray, t0, 1000, closestHitInfo);
-		// traceAll(ray, hitInfo, t0, closestHitInfo); // uncomment this line to run without using the BVH tree structure
+		//traceAll(ray, hitInfo, t0, closestHitInfo); // uncomment this line to run without using the BVH tree structure
 		
 		hitInfo = closestHitInfo;
 		
@@ -65,10 +59,8 @@ struct Scene
 			surfaces[i] = objects[i];
 		
 		writeln("Finished allocating array for the surfaces.");
-		root = createBVHTree2(surfaces);
+		root = createBVHTree(surfaces);
 		
-		writeln("Created the tree.");
-		
-		surfaces = null;
+		writeln("The BVH tree has been successfully created.");
 	}
 }

@@ -128,12 +128,11 @@ class Triangle : Surface
 	
 	override Box boundingBox() const
 	{
-		Box box = void;
+		Vector3 min = Vector3(min(a.x, b.x, c.x), min(a.y, b.y, c.y), min(a.z, b.z, c.z));
+		Vector3 max = Vector3(max(a.x, b.x, c.x), max(a.y, b.y, c.y), max(a.z, b.z, c.z));
 		
-		box.min = Vector3(min(a.x, b.x, c.x), min(a.y, b.y, c.y), min(a.z, b.z, c.z));
-		box.max = Vector3(max(a.x, b.x, c.x), max(a.y, b.y, c.y), max(a.z, b.z, c.z));
-		
-		return box;
+		Box b = {min, max};
+		return b;
 	}
 	
 	override Vector3 shade(const ref HitInfo hitInfo, ref Scene scene) const

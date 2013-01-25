@@ -1,9 +1,7 @@
 /*
  * TODO:
  * 
- * 1) When finished with BVH, make Surface into an interface (it is abstract class now)
- * 2) Make BVH.hit() non-recursive
- * 3) when the torus is enabled, segmentation fault in scene.preCalc()
+ * 1) Make BVH.hit() non-recursive
  */
 
 import std.stdio;
@@ -35,14 +33,18 @@ immutable SCREEN_WIDTH = 800;
 immutable SCREEN_HEIGHT = 600;
 immutable ASPECT_RATIO = SCREEN_WIDTH / cast(float)SCREEN_HEIGHT;
 
-void printBVH(Surface root, int i = 0, string str = "")
+/++void printBVH(Surface root, int i = 0, string str = "")
 {
 	if( root is null )
 		return;
 	
 	writeln("------PRINT()------");
-	writeln("icy");//writeln(root.boundingBox());
-	writeln("name = ", root.name, " depth = ", i, " [", str, "]");
+	
+	//if( cast(Triangle)root ) writeln("This is a triangle.");
+	//else if( cast(Sphere)root ) writeln("This is a sphere.");
+	
+	//writeln(root.boundingBox());
+	writeln("address = ", cast(void*)root);
 	writeln("------~~~~~~~------\n");
 	
 	if( (cast(BVHNode)root) !is null )
@@ -50,53 +52,13 @@ void printBVH(Surface root, int i = 0, string str = "")
 		printBVH((cast(BVHNode)(root)).left, i+1, "left");
 		printBVH((cast(BVHNode)(root)).right, i+1, "right");
 	}
-}
+}++/
 
-void f()
-{
-	Surface[] s = new Surface[3];
-	s[0] = new Sphere(0, 0, 0, 1);
-	s[0].name = "s0";
-	
-	s[1] = new Sphere(10, 0, 0, 1);
-	s[1].name = "s1";
-	
-	s[2] = new Sphere(20, 0, 0, 1);
-	s[2].name = "s2";
-	
-	//s[3] = new Sphere(30, 0, 0, 1);
-	//s[3].name = "s3";
-	
-	printBVH(createBVHTree2(s));
-}
-
-void g(Scene scene)
-{
-	writeln("Surface[] surfaces = new Surface[", scene.objects.length, "];\n");
-	
-	for(auto i = 0UL; i < scene.objects.length; ++i)
-	{
-		Surface o = scene.objects[i];
-		
-		if( cast(Sphere)o !is null ) // if it's a sphere
-		{
-			Sphere s = cast(Sphere)o;
-			writeln("surfaces[", i, "] = new Sphere(", s.center.x, "f, ", s.center.y, "f, ", s.center.z, "f, ", s.radius, "f);");
-		}
-		else if( cast(Triangle)o !is null ) // if it's a triangle
-		{
-			Triangle t = cast(Triangle)o;
-			writefln("surfaces[%s] = new Triangle(%sf, %sf, %sf, %sf, %sf, %sf, %sf, %sf, %sf);", i, t.a.x, t.a.y, t.a.z, t.b.x, t.b.y, t.b.z, t.c.x, t.c.y, t.c.z);
-		}
-		else
-		{
-			writeln("NULL");
-		}
-	}
-}
 
 void main()
 {
+	core.memory.GC.disable();
+	
 	init(); // initialize SDL, set window caption etc.
 	
 	SDL_Surface* screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32, SDL_HWSURFACE);
@@ -115,41 +77,28 @@ void main()
 	makeScene2(scene);
 	
 	scene.preCalc();
-	printBVH(scene.root);
 	
 	writeln("The scene has ", scene.objects.length, " triangles.");
 	writeln("Rendering...");
 	StopWatch watch;
 	watch.start();
 	
-	/++int[] ys = new int[SCREEN_HEIGHT];
+	int[] ys = new int[SCREEN_HEIGHT];
 	for(int i = 0; i < ys.length; ++i)
 		ys[i] = i;
 	
-	//print(scene.root); writeln();
+	Semaphore sema = new Semaphore(1);
 	
-	//int x, y;
-	Semaphore sema = new Semaphore(1);++/
-	
-	//foreach(y; parallel(ys))++/
-	for(int y = 0; y < SCREEN_HEIGHT; ++y)
+	foreach(y; parallel(ys))
+	//for(int y = 0; y < SCREEN_HEIGHT; ++y)
 	{
-		//y = 361;
-		
 		for(int x = 0; x < SCREEN_WIDTH; ++x)
 		{
-			//x = 397;
-			
 			Vector3 p = Vector3(ASPECT_RATIO * (x - SCREEN_WIDTH * 0.5f) / (SCREEN_WIDTH * 0.5f), (y - SCREEN_HEIGHT * 0.5f) / (SCREEN_HEIGHT * 0.5f), 0);
 			Ray r = {cameraPos, p - cameraPos};
 			
 			HitInfo hitInfo = void;
-			
-			//writeln("Ready to get into scene.trace()");
 			bool hit = scene.trace(r, hitInfo, 0.1f);
-			//writeln("Exited scene.trace()");
-			
-			//writeln("hit = ", hit);
 			
 			if( hit )
 			{
@@ -159,25 +108,20 @@ void main()
 				if( color.y > 1.0f ) color.y = 1.0f;
 				if( color.z > 1.0f ) color.z = 1.0f;
 				
-				//sema.wait();
+				sema.wait();
 				writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(color.x * 255), cast(ubyte)(color.y * 255), cast(ubyte)(color.z * 255));	
-				//sema.notify();
+				sema.notify();
 			}
 			else
 			{
-				//sema.wait();
+				sema.wait();
 				writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(0.5f * 255), cast(ubyte)(0.5f * 255), cast(ubyte)(0.5f * 255));	
-				//sema.notify();
+				sema.notify();
 			}
-			
-			//y = 10000;
-			//break;
-			//writeln("...Finished\n");
 		}
 		//sema.wait();
 		//SDL_Flip(screen);
 		//sema.notify();
-		
 	}
 	
 	watch.stop();
@@ -298,7 +242,7 @@ class SimpleColor : Material
 	}
 }
 
-// a surface with a diffuse component that acts as a mirror as well
+/// a surface with a diffuse component that acts as a mirror as well
 /++class Mirror : Material
 {
 	Vector3 color;
@@ -359,7 +303,7 @@ void makeScene2(ref Scene scene)
 	
 	floor.material = new SimpleColor(Vector3(0, 0, 0), Vector3(1, 1, 1), Vector3(0, 0, 0), 10);
 	scene.objects.insert(floor);
-	floor.name = "floor";
+	//floor.name = "floor";
 	
 	Mesh mesh = loadMesh("../Models/torus.obj");
 	Material meshMat = new SimpleColor(Vector3(0, 0, 0), Vector3(0.0f, 1.0f, 1.0f), Vector3(1, 1, 1), 100);
@@ -382,7 +326,6 @@ void makeScene2(ref Scene scene)
 	Sphere s;
 	for(int i = 0; i < 200; ++i)
 	{
-		
 		Vector3 center = Vector3(-120 + i * 5, 10 + 10 * sin(angle * PI / 180), 10 + i * 3);
 		s = new Sphere(center, 2);
 		s.material = new SimpleColor(Vector3(0, 0, 0), Vector3(1-i/200.0f, 1, 0.5f), Vector3(1, 1, 1), uniform(10.0f, 100));
@@ -397,16 +340,30 @@ void makeScene2(ref Scene scene)
 			angle += 8.0f;
 			s.center.x -= 8 * (i-50);
 		}
-		s.name = "INVISIBLE";
+		//s.name = "INVISIBLE";
 		
 		//break;
+	}
+	
+	for(int i = 0; i < 10; ++i)
+	{
+		for(int j = 0; j < 10; ++j)
+		{
+			for(int k = 0; k < 10; ++k)
+			{
+				Vector3 center = Vector3(i, j, k);
+				Sphere sss = new Sphere(center, 0.1f);
+				sss.material = new SimpleColor(Vector3(0, 0, 0), Vector3(1, 1, 1), Vector3(0, 0, 0), 0);
+				scene.objects.insert(sss);
+			}
+		}
 	}
 	
 	Vector3 center = Vector3(0, 10, 95);
 	Sphere s2 = new Sphere(center, 10);
 	s2.material = new SimpleColor(Vector3(0, 0, 0), Vector3(173/255.0f, 234/255.0f, 234/255.0f), Vector3(1, 1, 1), 100);
 	scene.objects.insert(s2);
-	s2.name = "visible";
+	//s2.name = "visible";
 	
 	// top light
 	Light l;

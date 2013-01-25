@@ -5,10 +5,8 @@ import raytracing.box;
 import raytracing.vector;
 import raytracing.scene;
 
-/*interface*/ class Surface
+abstract class Surface
 {
-	string name;
-	
 	abstract bool hit(const ref Ray r, float t0, float t1, ref HitInfo hitInfo);
 	
 	/// returns the bounding box of this surface

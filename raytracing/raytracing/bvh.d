@@ -94,15 +94,11 @@ BVHNode createBVHTree(Surface[] objects, ubyte axis = 0, int depth = 0)
 	
 	if( objects.length == 1 )
 	{
-		//writeln("One object. Depth = ", depth);
-		
 		node.left = objects[0];
 		node.box = objects[0].boundingBox();
 	}
 	else if( objects.length == 2 )
 	{
-		//writeln("Two objects. Depth = ", depth);
-		
 		node.left = objects[0];
 		node.right = objects[1];
 		
@@ -112,22 +108,18 @@ BVHNode createBVHTree(Surface[] objects, ubyte axis = 0, int depth = 0)
 	}
 	else
 	{
-		//writeln(objects.length, " objects. Depth = ", depth);
-		
 		switch(axis)
 		{
 		case 0:
-			//sort!("(a.boundingBox().min.x + a.boundingBox().max.x) * 0.5f < (b.boundingBox().min.x + b.boundingBox().max.x) * 0.5f", SwapStrategy.unstable)(objects);
-			sort!((a,b) => (a.boundingBox().min.x + a.boundingBox().max.x) * 0.5f < (b.boundingBox().min.x + b.boundingBox().max.x) * 0.5f)(objects);
+			sort!("(a.boundingBox().min.x + a.boundingBox().max.x) * 0.5f < (b.boundingBox().min.x + b.boundingBox().max.x) * 0.5f", SwapStrategy.unstable)(objects);
 			break;
 		
 		case 1:
-			//sort!("(a.boundingBox().min.y + a.boundingBox().max.y) * 0.5f < (b.boundingBox().min.y + b.boundingBox().max.y) * 0.5f", SwapStrategy.unstable)(objects);
-			sort!((a,b) => (a.boundingBox().min.y + a.boundingBox().max.y) * 0.5f < (b.boundingBox().min.y + b.boundingBox().max.y) * 0.5f)(objects);
+			sort!("(a.boundingBox().min.y + a.boundingBox().max.y) * 0.5f < (b.boundingBox().min.y + b.boundingBox().max.y) * 0.5f", SwapStrategy.unstable)(objects);
 			break;
 				
 		case 2:
-			sort!((a,b) => (a.boundingBox().min.z + a.boundingBox().max.z) * 0.5f < (b.boundingBox().min.z + b.boundingBox().max.z) * 0.5f)(objects);
+			sort!("(a.boundingBox().min.z + a.boundingBox().max.z) * 0.5f < (b.boundingBox().min.z + b.boundingBox().max.z) * 0.5f", SwapStrategy.unstable)(objects);
 			break;
 				
 		default:
@@ -145,36 +137,31 @@ BVHNode createBVHTree(Surface[] objects, ubyte axis = 0, int depth = 0)
 	return node;
 }
 
+/// creates the BVH tree in a non-recursive way. Every pair of Surface(s) is replaced by one BVHNode that is their parent
+/// This keep happening until there is only one BVHNode, which is the root of the tree
+/// currently it is slower than the recursive method because it allocates dynamic memory all time. Maybe this can be fixed if a container is used instead of a dynamic array.
 BVHNode createBVHTree2(Surface[] objects, ubyte axis = 0, int depth = 0)
 {
 	import std.algorithm, std.stdio;
 	
 	BVHNode root;
 	
-	//sort!("(a.boundingBox().min.x + a.boundingBox().max.x) * 0.5f < (b.boundingBox().min.x + b.boundingBox().max.x) * 0.5f", SwapStrategy.unstable)(objects);
+	sort!("(a.boundingBox().min.x + a.boundingBox().max.x) * 0.5f < (b.boundingBox().min.x + b.boundingBox().max.x) * 0.5f", SwapStrategy.unstable)(objects);
 	
 	while( objects.length > 1 )
 	{
-		writeln("--- Level ---");
-		foreach(o; objects)
-			write("[", o.name, "] ");
-		writeln();
-		
 		auto temp = new Surface[objects.length/2 + 1];
 		auto sz = 0UL;
 		
 		for(auto i = 0UL; i < objects.length; i += 2)
 		{
-			writeln("i = ", i, " sz = ", sz+1);
-			
 			BVHNode parent = new BVHNode();
-			parent.name = "p";
 			
 			parent.left = objects[i];
 			if( i + 1 < objects.length )
 			{	
 				parent.right = objects[i+1];
-			
+				
 				auto box1 = objects[i].boundingBox(), box2 = objects[i+1].boundingBox();
 				parent.box = combine(box1, box2);
 			}
