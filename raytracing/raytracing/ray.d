@@ -4,6 +4,6 @@ import raytracing.vector;
 
 struct Ray
 {
-	Vector3 e; // the starting point
-	Vector3 d; // the direction
+	Vector3!double e; // the starting point
+	Vector3!double d; // the direction
 }

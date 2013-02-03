@@ -23,7 +23,7 @@ Mesh loadMeshWavefrontObj(string filename)
 {
 	auto file = File(filename, "r");
 	
-	Array!(Vector3!double) vertices;
+	Array!Vector3 vertices;
 	vertices.reserve(10);
 	
 	Mesh mesh = new Mesh();
@@ -37,7 +37,7 @@ Mesh loadMeshWavefrontObj(string filename)
 		
 		if( tokens[0] == "v" )			// vertex
 		{
-			auto v = Vector3!double(to!double(tokens[1]), to!double(tokens[2]), to!double(tokens[3]));
+			Vector3 v = Vector3(to!float(tokens[1]), to!float(tokens[2]), to!float(tokens[3]));
 			vertices.insert(v);
 		}
 	}

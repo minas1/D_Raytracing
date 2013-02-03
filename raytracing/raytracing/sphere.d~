@@ -13,20 +13,20 @@ import raytracing.scene;
 class Sphere : Surface
 {
 	Material material;
-	Vector3!double center;
-	double radius;
+	Vector3 center;
+	float radius;
 	
 	this()
 	{
 	}
 	
-	this(const ref Vector3!double _center, double _radius)
+	this(const ref Vector3 _center, float _radius)
 	{
 		center = _center;
 		radius = _radius;
 	}
 	
-	this(double cX, double cY, double cZ, double _radius)
+	this(float cX, float cY, float cZ, float _radius)
 	{
 		center.x = cX;
 		center.y = cY;
@@ -35,26 +35,26 @@ class Sphere : Surface
 		radius = _radius;
 	}
 	
-	override bool hit(const ref Ray r, double p0, double p1, ref HitInfo hitInfo)
+	override bool hit(const ref Ray r, float p0, float p1, ref HitInfo hitInfo)
 	{
-		Vector3!double eMinusC = r.e - center;
-		double dot_d_eMinusC = dot(r.d, eMinusC);
+		Vector3 d = r.d, e = r.e, c = center;
+		Vector3 eMinusC = e-c;
 		
-		auto discriminant = dot_d_eMinusC * dot_d_eMinusC - dot(r.d, r.d) * (dot(eMinusC, eMinusC) - radius * radius);
+		float discriminant = dot(d, eMinusC) * dot(d, eMinusC) - dot(d, d) * (dot(eMinusC, eMinusC) - radius * radius);
 		if( discriminant >= 0 )
 		{
-			auto minusD = -r.d;
-			//double t1 = (dot(-d, e-c) + sqrt(discriminant)) / dot(d, d);
-			double t2 = (dot(minusD, eMinusC) - sqrt(discriminant)) / dot(r.d, r.d);
+			const Vector3 minusD = -d;
+			//float t1 = (dot(-d, e-c) + sqrt(discriminant)) / dot(d, d);
+			float t2 = (dot(minusD, eMinusC) - sqrt(discriminant)) / dot(d, d);
 			
 			// TODO: don't forget to change this if needed
 			if( t2 < p0 || t2 > p1 )
 				return false;
 			
 			hitInfo.t = t2;
-			hitInfo.hitPoint = r.e + r.d * t2;
-			hitInfo.ray = r.d;
-			hitInfo.surfaceNormal = (hitInfo.hitPoint - center) * 2;
+			hitInfo.hitPoint = e + d * t2;
+			hitInfo.ray = d;
+			hitInfo.surfaceNormal = (hitInfo.hitPoint - c) * 2;
 			hitInfo.hitSurface = this;
 		}
 		
@@ -63,15 +63,15 @@ class Sphere : Surface
 	
 	override Box boundingBox() const
 	{
-		auto min = Vector3!double(center.x - radius, center.y - radius, center.z - radius);
-		auto max = Vector3!double(center.x + radius, center.y + radius, center.z + radius);
+		Vector3 min = Vector3(center.x - radius, center.y - radius, center.z - radius);
+		Vector3 max = Vector3(center.x + radius, center.y + radius, center.z + radius);
 		
 		Box b = {min, max};
 		
 		return b;
 	}
 	
-	override Vector3!float shade(const ref HitInfo hitInfo, ref Scene scene) const
+	override Vector3 shade(const ref HitInfo hitInfo, ref Scene scene) const
 	{
 		return material.shade(hitInfo, scene);
 	}
@@ -79,7 +79,7 @@ class Sphere : Surface
 	/// returns true when this Sphere intersects with the Sphere s
 	bool intersects(const ref Sphere s)
 	{
-		double distance = sqrt(	(center.x - s.center.x) * (center.x - s.center.x) +
+		float distance = sqrt(	(center.x - s.center.x) * (center.x - s.center.x) +
 								(center.y - s.center.y) * (center.y - s.center.y) +
 								(center.z - s.center.z) * (center.z - s.center.z));
 		

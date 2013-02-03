@@ -8,21 +8,19 @@ class BVHNode : Surface
 	
 	Box box; // bounding box
 	
-	override bool hit(const ref Ray r, double t0, double t1, ref HitInfo hitInfo)
+	override bool hit(const ref Ray r, float t0, float t1, ref HitInfo hitInfo)
 	{
 		import std.algorithm, std.stdio;
-	
-		//writefln("bvh.hit() was called with e = (%s, %s, %s) and d = (%s, %s, %s)", r.e.x, r.e.y, r.e.z, r.d.x, r.d.y, r.d.z);
-			
+		
 		if( box.intersects(r) )
 		{
-			double leftT = double.max, rightT = double.max;
+			float leftT = float.max, rightT = float.max;
 			bool leftHit = void, rightHit = void;
 			
-			/++if( left is null && right is null )
+			/*if( left is null && right is null )
 			{
-				std.stdio.writeln("left & right are null -- they shouldn't!!!");
-			}++/
+				//std.stdio.writeln("left & right are null -- they shouldn't!!!");
+			}*/
 			
 			if( left !is null && right is null && left.hit(r, t0, t1, hitInfo) )
 			{
@@ -40,22 +38,20 @@ class BVHNode : Surface
 				
 				HitInfo leftHitInfo = hitInfo, rightHitInfo = hitInfo;
 				
-				//writeln("Calling left child");
 				leftHit = left.hit(r, t0, t1, leftHitInfo);
 				leftT = leftHitInfo.t;
 				
-				//writeln("Calling right child");
 				rightHit = right.hit(r, t0, t1, rightHitInfo);
 				rightT = rightHitInfo.t;
 				
 				if( leftHit && !rightHit )
 				{
-					//writeln("Only left subtree was hit. t = ", leftT);
+					//writeln("Only left subtree was hit. t = ", hitInfo.t);
 					hitInfo = leftHitInfo;
 				}
 				else if( !leftHit && rightHit )
 				{
-					//writeln("Only right subtree was hit. t = ", rightT);
+					//writeln("Only right subtree was hit. t = ", hitInfo.t);
 					hitInfo = rightHitInfo;
 				}
 				else if( leftHit && rightHit )
@@ -82,9 +78,10 @@ class BVHNode : Surface
 		return box;
 	}
 	
-	override Vector3!float shade(const ref HitInfo hitInfo, ref Scene scene) const
+	override Vector3 shade(const ref HitInfo hitInfo, ref Scene scene) const
 	{
-		return Vector3!float(0, 0, 0);
+		//std.stdio.writeln("In BVH.shade()");
+		return Vector3(0, 0, 0);
 	}
 }
 

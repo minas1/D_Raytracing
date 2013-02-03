@@ -7,5 +7,5 @@ import raytracing.scene;
 abstract interface Material
 {
 	/// returns the color
-	Vector3 shade(const ref HitInfo hitInfo, ref Scene scene) const;
+	Vector3!float shade(const ref HitInfo hitInfo, ref Scene scene) const;
 }

@@ -4,6 +4,6 @@ import raytracing.vector;
 
 struct Light
 {
-	Vector3 position;	// position of the light
-	Vector3 I;			// color of the light
+	Vector3!double position;	// position of the light
+	Vector3!float I;			// color of the light
 }
