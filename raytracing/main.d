@@ -2,7 +2,9 @@
  * TODO:
  * 
  * 1) Implement soft shadows.
- * 2) Make BVH.hit() non-recursive.
+ * 2) Implement anti-aliasing
+ * 3) Make BVH.hit() non-recursive.
+ * 4) Replace DList with Slist or something else because some pointers are never freed (I read it on the D mailing list)
  */
 
 import std.stdio;
@@ -27,14 +29,13 @@ import std.parallelism;
 import std.random;
 import core.sync.semaphore;
 import std.algorithm;
+import std.range;
 
 import derelict.sdl.sdl;
 
 immutable SCREEN_WIDTH = 800;
 immutable SCREEN_HEIGHT = 600;
 immutable ASPECT_RATIO = SCREEN_WIDTH / cast(float)SCREEN_HEIGHT;
-
-int icyX, icyY;
 
 void printBVH(Surface root, int i = 0, string str = "")
 {
@@ -83,14 +84,10 @@ void main()
 	
 	//printBVH(scene.root);
 	
-	int[] ys = new int[SCREEN_HEIGHT];
-	for(int i = 0; i < ys.length; ++i)
-		ys[i] = i;
-	
 	Semaphore sema = new Semaphore(1);
 	
 	watch.start();
-	foreach(y; parallel(ys))
+	foreach(y; parallel(iota(0, SCREEN_HEIGHT)))
 	//for(int y = 0; y < SCREEN_HEIGHT; ++y)
 	{
 		for(int x = 0; x < SCREEN_WIDTH; ++x)
@@ -135,7 +132,7 @@ void main()
 	}
 	
 	watch.stop();
-	writeln(watch.peek().nsecs / 1_000_000_100.0, " s");
+	writeln(watch.peek().nsecs / 1_000_000_000.0, " s");
 	
 	SDL_Flip(screen); // update the screen
 
@@ -248,9 +245,9 @@ class SimpleColor : Material
 }
 
 /// a surface with a diffuse component that acts as a mirror as well
-/++class Mirror : Material
+/*class Mirror : Material
 {
-	Vector3 color;
+	Vector3!float color;
 	float mirrorPercentage; // percentage of the final color that comes from reflected light
 	
 	this(ubyte r, ubyte g, ubyte b, float _mirrorPercentage)
@@ -262,10 +259,12 @@ class SimpleColor : Material
 		mirrorPercentage = _mirrorPercentage;
 	}
 	
-	Vector3 shade(const ref HitInfo hitInfo, ref Scene scene) const
+	Vector3!float shade(const ref HitInfo _hitInfo, ref Scene scene) const
 	{
-		Vector3 finalColor = Vector3(0.0f, 0.0f, 0.0f); // the final color
-		Vector3 normalColor = Vector3(0, 0, 0), reflectedColor = Vector3(0, 0, 0);
+		Vector3!float finalColor = Vector3!float(0.0f, 0.0f, 0.0f); // the final color
+		Vector3!float normalColor = Vector3!float(0, 0, 0), reflectedColor = Vector3!float(0, 0, 0);
+		
+		HitInfo hitInfo = _hitInfo;
 		
 		hitInfo.surfaceNormal.normalize();
 		hitInfo.ray.normalize();
@@ -275,7 +274,7 @@ class SimpleColor : Material
 		{	
 			Light light = scene.lights[i];
 			
-			Vector3 lightVector = light.position - hitInfo.hitPoint; // vector from the hit point to the light
+			Vector3!double lightVector = light.position - hitInfo.hitPoint; // vector from the hit point to the light
 			lightVector.normalize();
 			
 			HitInfo hitInfo2;
@@ -295,7 +294,7 @@ class SimpleColor : Material
 		
 		return reflectedColor * mirrorPercentage + normalColor * (1 - mirrorPercentage);
 	}
-}++/
+}*/
 
 void makeScene2(ref Scene scene)
 {	
@@ -306,26 +305,37 @@ void makeScene2(ref Scene scene)
 								-200,	-10,	160
 								);
 	
-	floor.material = new SimpleColor(Vector3!float(0, 0, 0), Vector3!float(1, 1, 1), Vector3!float(0, 0, 0), 100);
+	floor.material = new SimpleColor(Vector3!float(0, 0, 0), Vector3!float(0.5f, 0.5f, 0.5f), Vector3!float(0, 0.2f, 0), 100);
 	scene.objects.insert(floor);
 	floor.name = "floor";
 	
-	Mesh mesh = loadMesh("../Models/torus.obj");
-	Material meshMat = new SimpleColor(Vector3!float(0, 0, 0), Vector3!float(0.0f, 1.0f, 1.0f), Vector3!float(1, 1, 1), 100);
-	foreach(t; mesh.triangles)
+	for(int i = 0; i < 5; ++i)
 	{
-		t.material = meshMat;
+		Mesh mesh = loadMesh("../Models/dlang.obj");
+		Material meshMat = new SimpleColor(Vector3!float(0, 0, 0), Vector3!float(1.0f, 0.0f, 0.0f), Vector3!float(1, 1, 1), 100);
 		
-		t.a.y += 10;
-		t.b.y += 10;
-		t.c.y += 10;
+		float randY = i * 10;//uniform(0, 5 + i * 15);
+		float randX = (-1)^^i * i * 15; //uniform(-15 * i - 10, 15 * i + 10);
 		
-		t.a.z += 55;
-		t.b.z += 55;
-		t.c.z += 55;
-		
-		t.name = "Torus";
-		//scene.objects.insert(t);
+		foreach(t; mesh.triangles)
+		{
+			t.material = meshMat;
+			
+			t.a.x += randX;
+			t.b.x += randX;
+			t.c.x += randX;
+			
+			t.a.y += randY;
+			t.b.y += randY;
+			t.c.y += randY;
+			
+			t.a.z += 30 + i * 15;
+			t.b.z += 30 + i * 15;
+			t.c.z += 30 + i * 15;
+			
+			t.name = "Torus";
+			scene.objects.insert(t);
+		}
 	}
 	
 	double angle = 0.0;
@@ -347,8 +357,6 @@ void makeScene2(ref Scene scene)
 			s.center.x -= 8 * (i-50);
 		}
 		//s.name = "INVISIBLE";
-		
-		//break;
 	}
 	
 	auto center = Vector3!double(0, 10, 55);
@@ -358,11 +366,11 @@ void makeScene2(ref Scene scene)
 	s2.name = "sphere";
 	
 	Light l = void;
-	auto lightPos = Vector3!double(-60, 180, -100);
-	auto I = Vector3!float(0.9f, 0.9f, 0.5f);
-	l.position = lightPos;
-	l.I = I;
-	
+	l.position = Vector3!double(-60, 180, -100);
+	l.I = Vector3!float(0.7f, 0.7f, 0.7f);
 	scene.lights.insert(l);
-	//scene.addAreaLight(lightPos, I, 1600, 0.01);
+	
+	l.position = Vector3!double(30, 50, -20);
+	l.I = Vector3!float(1.0f, 0.55f, 0f);
+	scene.lights.insert(l);
 }
