@@ -66,7 +66,6 @@
     <Compile Include="raytracing\scene.d" />
     <Compile Include="raytracing\material.d" />
     <Compile Include="raytracing\light.d" />
-    <Compile Include="raytracing\math.d" />
     <Compile Include="raytracing\triangle.d" />
     <Compile Include="raytracing\mesh.d" />
     <Compile Include="raytracing\meshloader.d" />

@@ -23,7 +23,14 @@ class Triangle : Surface
 	{
 	}
 	
-	this(const ref Vector3!double _a, const ref Vector3!double _b, const ref Vector3!double _c)
+	this(Vector3!double _a, Vector3!double _b, Vector3!double _c)
+	{
+		a = _a;
+		b = _b;
+		c = _c;
+	}
+	
+	this(ref Vector3!double _a, ref Vector3!double _b, ref Vector3!double _c)
 	{
 		a = _a;
 		b = _b;

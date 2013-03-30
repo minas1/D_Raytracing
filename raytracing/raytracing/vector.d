@@ -92,16 +92,61 @@ struct Vector3(T)
 		
 		return temp;
 	}
+	
+	Vector3 opBinary(string op) (ref Vector3 v) const
+	{
+		static if( op == "+" )
+		{
+			Vector3 temp = this;
+			temp.x += v.x;
+			temp.y += v.y;
+			temp.z += v.z;
+		}
+		else static if( op == "-" )
+		{
+			Vector3 temp = this;
+			temp.x -= v.x;
+			temp.y -= v.y;
+			temp.z -= v.z;
+		}
+		else static if( op == "*" )
+		{
+			Vector3 temp = this;
+			temp.x *= v.x;
+			temp.y *= v.y;
+			temp.z *= v.z;
+		}
+		
+		return temp;
+	}
 }
 
 /// dot product of two Vector3 vectors
-auto dot(T) (const ref Vector3!T u, const ref Vector3!T v) @safe pure nothrow
+auto dot(T) (Vector3!T u, Vector3!T v) @safe pure nothrow
+{
+	return u.x * v.x + u.y * v.y + u.z * v.z;
+}
+
+/// dot product of two Vector3 vectors
+auto dot(T) (ref Vector3!T u, ref Vector3!T v) @safe pure nothrow
 {
 	return u.x * v.x + u.y * v.y + u.z * v.z;
 }
 
 /// cross product
-Vector3!T cross(T) (const ref Vector3!T a, const ref Vector3!T b) @safe pure nothrow
+Vector3!T cross(T) (Vector3!T a, Vector3!T b) @safe pure nothrow
+{
+	Vector3!T w = void;
+	
+	w.x = a.y * b.z - a.z * b.y;
+	w.y = a.z * b.x - a.x * b.z;
+	w.z = a.x * b.y - a.y * b.x;
+	
+	return w;
+}
+
+/// cross product
+Vector3!T cross(T) (ref Vector3!T a, ref Vector3!T b) @safe pure nothrow
 {
 	Vector3!T w = void;
 	
@@ -113,7 +158,13 @@ Vector3!T cross(T) (const ref Vector3!T a, const ref Vector3!T b) @safe pure not
 }
 
 /// returns the length of this vector
-auto length(T) (const ref Vector3!T v) @safe pure nothrow
+auto length(T) (Vector3!T v) @safe pure nothrow
+{
+	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+
+/// returns the length of this vector
+auto length(T) (ref Vector3!T v) @safe pure nothrow
 {
 	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }

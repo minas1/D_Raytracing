@@ -20,7 +20,13 @@ class Sphere : Surface
 	{
 	}
 	
-	this(const ref Vector3!double _center, double _radius)
+	this(ref Vector3!double _center, double _radius)
+	{
+		center = _center;
+		radius = _radius;
+	}
+	
+	this(Vector3!double _center, double _radius)
 	{
 		center = _center;
 		radius = _radius;
@@ -43,9 +49,8 @@ class Sphere : Surface
 		auto discriminant = dot_d_eMinusC * dot_d_eMinusC - dot(r.d, r.d) * (dot(eMinusC, eMinusC) - radius * radius);
 		if( discriminant >= 0 )
 		{
-			auto minusD = -r.d;
 			//double t1 = (dot(-d, e-c) + sqrt(discriminant)) / dot(d, d);
-			double t2 = (dot(minusD, eMinusC) - sqrt(discriminant)) / dot(r.d, r.d);
+			double t2 = (dot(-r.d, eMinusC) - sqrt(discriminant)) / dot(r.d, r.d);
 			
 			// TODO: don't forget to change this if needed
 			if( t2 < p0 || t2 > p1 )

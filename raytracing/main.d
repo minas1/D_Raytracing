@@ -1,10 +1,8 @@
 /*
  * TODO:
  * 
- * 1) Implement soft shadows.
- * 2) Implement anti-aliasing
- * 3) Make BVH.hit() non-recursive.
- * 4) Replace DList with Slist or something else because some pointers are never freed (I read it on the D mailing list)
+ * 1) Make BVH.hit() non-recursive.
+ * 2) Replace DList with Slist or something else because some pointers are never freed (I read it on the D mailing list)
  */
 
 import std.stdio;
@@ -18,7 +16,6 @@ import raytracing.scene;
 import raytracing.surface;
 import raytracing.material;
 import raytracing.light;
-import raytracing.math;
 import raytracing.meshloader;
 import raytracing.box;
 import raytracing.bvh;
@@ -88,43 +85,49 @@ void main()
 	
 	watch.start();
 	foreach(y; parallel(iota(0, SCREEN_HEIGHT)))
-	//for(int y = 0; y < SCREEN_HEIGHT; ++y)
 	{
-		for(int x = 0; x < SCREEN_WIDTH; ++x)
+		foreach(x; iota(0,SCREEN_WIDTH))
 		{
-			//x = 400;
-			//y = 250;
+			immutable N = 3; // antialiasing samples
+			auto c = Vector3!float(0, 0, 0);
 			
-			auto p = Vector3!double(ASPECT_RATIO * (x - SCREEN_WIDTH * 0.5) / (SCREEN_WIDTH * 0.5), (y - SCREEN_HEIGHT * 0.5) / (SCREEN_HEIGHT * 0.5), 0);
-			Ray r = {cameraPos, p - cameraPos};
-			
-			HitInfo hitInfo = void;
-			bool hit = scene.trace(r, hitInfo, 0.01);
-			
-			if( hit )
-			{	
-				//writeln("Ready to call shade()");
-				auto color = hitInfo.hitSurface.shade(hitInfo, scene);
-				//writeln("shade() has returned");
-				
-				if( color.x > 1.0f ) color.x = 1.0f;
-				if( color.y > 1.0f ) color.y = 1.0f;
-				if( color.z > 1.0f ) color.z = 1.0f;
-				
-				sema.wait();
-				writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(color.x * 255), cast(ubyte)(color.y * 255), cast(ubyte)(color.z * 255));	
-				sema.notify();
-			}
-			else
+			foreach(k1; 0..N) // these two loops are for anti-aliasing
 			{
-				sema.wait();
-				writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(0.5f * 255), cast(ubyte)(0.5f * 255), cast(ubyte)(0.5f * 255));	
-				sema.notify();
+				foreach(k2; 0..N)
+				{
+					auto random = uniform(0.0, 1.0);
+					auto p = Vector3!double(ASPECT_RATIO * (x + (k1 + random) / N - SCREEN_WIDTH * 0.5) / (SCREEN_WIDTH * 0.5), (y + (k2 + random) / N - SCREEN_HEIGHT * 0.5) / (SCREEN_HEIGHT * 0.5), 0);
+					
+					Ray r = {cameraPos, p - cameraPos};
+					
+					HitInfo hitInfo = void;
+					bool hit = scene.trace(r, hitInfo, 0.01);
+					
+					if( hit )
+					{	
+						auto color = hitInfo.hitSurface.shade(hitInfo, scene);
+						
+						if( color.x > 1.0f ) color.x = 1.0f;
+						if( color.y > 1.0f ) color.y = 1.0f;
+						if( color.z > 1.0f ) color.z = 1.0f;
+					
+						c.x += color.x;
+						c.y += color.y;
+						c.z += color.z;
+					}
+					else // add background color if no hit
+					{
+						c.x += 0.5f;
+						c.y += 0.5f;
+						c.z += 0.5f;
+					}
+				}
 			}
 			
-			//x = y = 1000;
-			//break;
-			
+			c = c / (N * N);
+			sema.wait();
+			writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(c.x * 255), cast(ubyte)(c.y * 255), cast(ubyte)(c.z * 255));	
+			sema.notify();
 		}
 		//sema.wait();
 		//SDL_Flip(screen);
@@ -194,6 +197,8 @@ class SimpleColor : Material
 	
 	Vector3!float shade(const ref HitInfo _hitInfo, ref Scene scene) const
 	{
+		import std.math;
+		
 		Vector3!float finalColor = ka; // the final color
 		
 		Vector3!double n = _hitInfo.surfaceNormal;
@@ -214,30 +219,39 @@ class SimpleColor : Material
 			
 			HitInfo hitInfo2 = void;
 			
-			Ray ray = {hitPoint, light.position - hitPoint};
-			normalize(ray.d);
+			// calculate shadow ray by taking shadow samples
+			// take shadow ray samples
+			const int SHADOW_SAMPLES = cast(int)(light.u.length() * light.v.length() * light.w.length());
 			
-			if( !scene.trace(ray, hitInfo2, 0.01) )
+			auto tempColor = Vector3!float(0, 0, 0);
+			foreach(j; 0..SHADOW_SAMPLES)
 			{
-				// diffuse shading
-				if( dot(n, lightVector) > 0 )
+				auto randomPoint = light.position + light.u * uniform(-1.0, 1.0) + light.v * uniform(-1.0, 1.0) + light.w * uniform(-1.0, 1.0);
+			
+				Ray ray = {hitPoint, randomPoint - hitPoint};
+				normalize(ray.d);
+				
+				if( !scene.trace(ray, hitInfo2, 0.01) )
 				{
-					finalColor = finalColor + light.I * kd * dot(n, lightVector);
-					
-					// specular shading
-					Vector3!double H = (lightVector + hitRay) * 0.5; // find the half vector, H
-					H.normalize();
-					
-					auto specularDotProduct = dot(n, H);
-					
-					if( specularDotProduct > 0.0 )
-						finalColor = finalColor + light.I * ks * std.math.pow(specularDotProduct, specularComponent);
+					// diffuse shading
+					if( dot(n, lightVector) > 0 )
+					{
+						tempColor = tempColor + light.I * kd * dot(n, lightVector);
+						
+						// specular shading
+						Vector3!double H = (lightVector + hitRay) * 0.5; // find the half vector, H
+						H.normalize();
+						
+						auto specularDotProduct = dot(n, H);
+						
+						if( specularDotProduct > 0.0 )
+							tempColor = tempColor + light.I * ks * pow(specularDotProduct, specularComponent);
+					}
 				}
 			}
-			else
-			{
-				// no color is added, shadow is shown
-			}
+			finalColor.x += tempColor.x / SHADOW_SAMPLES;
+			finalColor.y += tempColor.y / SHADOW_SAMPLES;
+			finalColor.z += tempColor.z / SHADOW_SAMPLES;
 		}
 		
 		return finalColor;
@@ -367,10 +381,9 @@ void makeScene2(ref Scene scene)
 	
 	Light l = void;
 	l.position = Vector3!double(-60, 180, -100);
-	l.I = Vector3!float(0.7f, 0.7f, 0.7f);
-	scene.lights.insert(l);
-	
-	l.position = Vector3!double(30, 50, -20);
-	l.I = Vector3!float(1.0f, 0.55f, 0f);
+	l.u = Vector3!double(3, 0, 0);
+	l.v = Vector3!double(0, 3, 0);
+	l.w = Vector3!double(0, 0, 3);
+	l.I = Vector3!float(0.75f, 0.75f, 0.75f);
 	scene.lights.insert(l);
 }
