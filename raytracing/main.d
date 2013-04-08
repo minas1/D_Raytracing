@@ -1,8 +1,8 @@
 /*
  * TODO:
  * 
- * 1) Make BVH.hit() non-recursive.
- * 2) Replace DList with Slist or something else because some pointers are never freed (I read it on the D mailing list)
+ * 1) !!! Make triangle.hit() faster
+ * 2) Make BVH.hit() non-recursive.
  */
 
 import std.stdio;
@@ -54,8 +54,6 @@ void printBVH(Surface root, int i = 0, string str = "")
 
 void main()
 {
-	core.memory.GC.disable();
-	
 	init(); // initialize SDL, set window caption etc.
 	
 	SDL_Surface* screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32, SDL_HWSURFACE);
@@ -77,12 +75,12 @@ void main()
 	
 	writeln("The scene has ", scene.objects.length, " triangles.");
 	writeln("Rendering...");
-	StopWatch watch;
 	
 	//printBVH(scene.root);
 	
 	Semaphore sema = new Semaphore(1);
 	
+	StopWatch watch;
 	watch.start();
 	foreach(y; parallel(iota(0, SCREEN_HEIGHT)))
 	{
@@ -224,28 +222,42 @@ class SimpleColor : Material
 			const int SHADOW_SAMPLES = cast(int)(light.u.length() * light.v.length() * light.w.length());
 			
 			auto tempColor = Vector3!float(0, 0, 0);
-			foreach(j; 0..SHADOW_SAMPLES)
-			{
-				auto randomPoint = light.position + light.u * uniform(-1.0, 1.0) + light.v * uniform(-1.0, 1.0) + light.w * uniform(-1.0, 1.0);
 			
-				Ray ray = {hitPoint, randomPoint - hitPoint};
-				normalize(ray.d);
+			
+			double nDotLightVec = dot(n, lightVector);
+			
+			if( nDotLightVec > 0 )
+			{
+				// precalculate some things
+				Vector3!double H = (lightVector + hitRay) * 0.5; // find the half vector, H
+				H.normalize();
 				
-				if( !scene.trace(ray, hitInfo2, 0.01) )
+				double specularDotProduct = dot(n, H);
+				
+				auto addedDiffuseColor = light.I * kd * nDotLightVec;
+				auto addedSpecularColor = light.I * ks * pow(specularDotProduct, specularComponent);
+
+				foreach(j; 0..SHADOW_SAMPLES)
 				{
-					// diffuse shading
-					if( dot(n, lightVector) > 0 )
+					auto randomPoint = light.position + light.u * uniform(-1.0, 1.0) + light.v * uniform(-1.0, 1.0) + light.w * uniform(-1.0, 1.0);
+				
+					Ray ray = {hitPoint, randomPoint - hitPoint};
+					normalize(ray.d);
+					
+					if( !scene.trace(ray, hitInfo2, 0.01) )
 					{
-						tempColor = tempColor + light.I * kd * dot(n, lightVector);
+						// no need to check if n dot l is > 0, because we already know it is
 						
-						// specular shading
-						Vector3!double H = (lightVector + hitRay) * 0.5; // find the half vector, H
-						H.normalize();
-						
-						auto specularDotProduct = dot(n, H);
-						
+						tempColor.x += addedDiffuseColor.x;
+						tempColor.y += addedDiffuseColor.y;
+						tempColor.z += addedDiffuseColor.z;
+
 						if( specularDotProduct > 0.0 )
-							tempColor = tempColor + light.I * ks * pow(specularDotProduct, specularComponent);
+						{
+							tempColor.x += addedSpecularColor.x;
+							tempColor.y += addedSpecularColor.y;
+							tempColor.z += addedSpecularColor.z;
+						}
 					}
 				}
 			}
@@ -323,7 +335,7 @@ void makeScene2(ref Scene scene)
 	scene.objects.insert(floor);
 	floor.name = "floor";
 	
-	for(int i = 0; i < 5; ++i)
+	/+for(int i = 0; i < 5; ++i)
 	{
 		Mesh mesh = loadMesh("../Models/dlang.obj");
 		Material meshMat = new SimpleColor(Vector3!float(0, 0, 0), Vector3!float(1.0f, 0.0f, 0.0f), Vector3!float(1, 1, 1), 100);
@@ -350,7 +362,7 @@ void makeScene2(ref Scene scene)
 			t.name = "Torus";
 			scene.objects.insert(t);
 		}
-	}
+	}+/
 	
 	double angle = 0.0;
 	Sphere s;
@@ -370,7 +382,6 @@ void makeScene2(ref Scene scene)
 			angle += 8.0;
 			s.center.x -= 8 * (i-50);
 		}
-		//s.name = "INVISIBLE";
 	}
 	
 	auto center = Vector3!double(0, 10, 55);
@@ -384,6 +395,6 @@ void makeScene2(ref Scene scene)
 	l.u = Vector3!double(3, 0, 0);
 	l.v = Vector3!double(0, 3, 0);
 	l.w = Vector3!double(0, 0, 3);
-	l.I = Vector3!float(0.75f, 0.75f, 0.75f);
+	l.I = Vector3!float(0.95f, 0.95f, 0.95f);
 	scene.lights.insert(l);
 }

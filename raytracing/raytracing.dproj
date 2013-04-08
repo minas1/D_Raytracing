@@ -43,8 +43,6 @@
 -L-lDerelictSDL
 -L-lDerelictUtil
 -L-ldl</ExtraLinkerArguments>
-    <ExtraCompilerArguments>-inline
--noboundscheck</ExtraCompilerArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Unittest|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>

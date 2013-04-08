@@ -60,7 +60,7 @@ class Triangle : Surface
 		// t = (dot(a, n) - dot(e, n)) / dot(d, n);
 		// and because dot product is distributive,
 		// we can write t = dot(a-e,n) / dot(d,n)
-
+		
 		Vector3!double temp0 = b-a, temp1 = c-a;
 		Vector3!double n = cross(temp0, temp1); // calculate the normal of the plane that the triangle is on
 		n.normalize();

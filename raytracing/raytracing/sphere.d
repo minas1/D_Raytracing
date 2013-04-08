@@ -63,7 +63,7 @@ class Sphere : Surface
 			hitInfo.hitSurface = this;
 		}
 		
-		return discriminant >= 0; // TODO: implement
+		return discriminant >= 0;
 	}
 	
 	override Box boundingBox() const

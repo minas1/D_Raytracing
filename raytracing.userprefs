@@ -2,7 +2,13 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
   <MonoDevelop.Ide.Workbench ActiveDocument="raytracing/main.d">
     <Files>
-      <File FileName="raytracing/main.d" Line="2" Column="5" />
+      <File FileName="raytracing/main.d" Line="383" Column="29" />
+      <File FileName="raytracing/raytracing/scene.d" Line="69" Column="2" />
+      <File FileName="raytracing/raytracing/vector.d" Line="134" Column="2" />
+      <File FileName="raytracing/raytracing/light.d" Line="13" Column="43" />
+      <File FileName="raytracing/raytracing/bvh.d" Line="11" Column="30" />
+      <File FileName="raytracing/raytracing/triangle.d" Line="55" Column="24" />
+      <File FileName="raytracing/raytracing/sphere.d" Line="48" Column="3" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
