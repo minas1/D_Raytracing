@@ -1,25 +1,11 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="raytracing/main.d">
+  <MonoDevelop.Ide.Workbench ActiveDocument="raytracing/raytracing/raytracer.d">
     <Files>
-      <File FileName="raytracing/main.d" Line="383" Column="29" />
-      <File FileName="raytracing/raytracing/scene.d" Line="69" Column="2" />
-      <File FileName="raytracing/raytracing/vector.d" Line="134" Column="2" />
-      <File FileName="raytracing/raytracing/light.d" Line="13" Column="43" />
-      <File FileName="raytracing/raytracing/bvh.d" Line="11" Column="30" />
-      <File FileName="raytracing/raytracing/triangle.d" Line="55" Column="24" />
-      <File FileName="raytracing/raytracing/sphere.d" Line="48" Column="3" />
+      <File FileName="raytracing/main.d" Line="59" Column="2" />
+      <File FileName="raytracing/raytracing/scene.d" Line="29" Column="50" />
+      <File FileName="raytracing/raytracing/raytracer.d" Line="57" Column="7" />
     </Files>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State expanded="True">
-          <Node name="raytracing" expanded="True">
-            <Node name="raytracing" expanded="True" />
-            <Node name="main.d" selected="True" />
-          </Node>
-        </State>
-      </Pad>
-    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

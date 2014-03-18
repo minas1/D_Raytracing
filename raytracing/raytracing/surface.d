@@ -5,16 +5,14 @@ import raytracing.box;
 import raytracing.vector;
 import raytracing.scene;
 
-abstract class Surface
+interface Surface
 {
-	string name = "";
-	
-	abstract bool hit(const ref Ray r, double t0, double t1, ref HitInfo hitInfo);
+	bool hit(const ref Ray r, double t0, double t1, ref HitInfo hitInfo);
 	
 	/// returns the bounding box of this surface
-	abstract Box boundingBox() const;
+	Box boundingBox() const;
 	
-	abstract Vector3!float shade(const ref HitInfo hitInfo, ref Scene scene) const;
+	Vector3!float shade(const ref HitInfo hitInfo, ref Scene scene) const;
 }
 
 struct HitInfo

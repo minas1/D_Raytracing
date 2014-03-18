@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{390B42B6-D7F3-4977-BB3A-4D1669AB75FA}</ProjectGuid>
-    <UseDefaultCompiler>True</UseDefaultCompiler>
+    <UseDefaultCompiler>False</UseDefaultCompiler>
     <IncrementalLinking>True</IncrementalLinking>
     <PreferOneStepBuild>True</PreferOneStepBuild>
     <Compiler>DMD</Compiler>
@@ -30,19 +30,22 @@
 -L-lDerelictUtil
 -L-ldl</ExtraLinkerArguments>
     <ExtraCompilerArguments>-gc</ExtraCompilerArguments>
+    <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release</OutputPath>
     <UnittestMode>False</UnittestMode>
     <ObjectsDirectory>obj/Release</ObjectsDirectory>
     <DebugLevel>0</DebugLevel>
-    <Externalconsole>True</Externalconsole>
     <Target>Executable</Target>
     <OutputName>raytracing</OutputName>
-    <ExtraLinkerArguments>-L-L/usr/lib/derelict2
+    <ExtraLinkerArguments>-L/usr/lib/derelict2
 -L-lDerelictSDL
 -L-lDerelictUtil
 -L-ldl</ExtraLinkerArguments>
+    <ExtraCompilerArguments>-gc</ExtraCompilerArguments>
+    <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
+    <Externalconsole>true</Externalconsole>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Unittest|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -53,6 +56,12 @@
     <Externalconsole>True</Externalconsole>
     <Target>Executable</Target>
     <OutputName>raytracing</OutputName>
+    <ExtraCompilerArguments>-gc</ExtraCompilerArguments>
+    <ExtraLinkerArguments>-L-L/usr/lib/derelict2
+-L-lDerelictSDL
+-L-lDerelictUtil
+-L-ldl</ExtraLinkerArguments>
+    <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="main.d" />
@@ -65,11 +74,15 @@
     <Compile Include="raytracing\material.d" />
     <Compile Include="raytracing\light.d" />
     <Compile Include="raytracing\triangle.d" />
-    <Compile Include="raytracing\mesh.d" />
     <Compile Include="raytracing\meshloader.d" />
     <Compile Include="raytracing\bvh.d" />
+    <Compile Include="raytracing\math.d" />
+    <Compile Include="raytracing\mesh.d" />
+    <Compile Include="raytracing\materials\SimpleColor.d" />
+    <Compile Include="raytracing\raytracer.d" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="raytracing\" />
+    <Folder Include="raytracing\materials\" />
   </ItemGroup>
 </Project>

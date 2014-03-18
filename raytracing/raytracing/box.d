@@ -10,19 +10,19 @@ struct Box
 {
 	Vector3!double min, max;
 
-	bool isPointInside(const ref Vector3!double v) const
+	bool isPointInside(const ref Vector3!double v) const @safe pure nothrow
 	{
 		return v.x >= min.x && v.y >= min.y && v.z >= min.z
 			&& v.x <= max.x && v.y <= max.y && v.z <= max.z;
 	}
 	
-	bool isPointInside(double x, double y, double z) const
+	bool isPointInside(double x, double y, double z) const @safe pure nothrow
 	{
 		return x >= min.x && y >= min.y && z >= min.z
 			&& x <= max.x && y <= max.y && z <= max.z;
 	}
 	
-	bool intersects(const ref Ray r) const
+	bool intersects(const ref Ray r) const @safe pure nothrow
 	{
 		auto a = Vector3!double(1/r.d.x, 1/r.d.y, 1/r.d.z);
 		Vector3!double tMin = void, tMax = void;
@@ -70,7 +70,7 @@ struct Box
 	}
 }
 
-Box combine(const ref Box b1, const ref Box b2)
+Box combine(const ref Box b1, const ref Box b2) @safe pure nothrow
 {
 	Box box = {
 			Vector3!double(min(b1.min.x, b2.min.x), min(b1.min.y, b2.min.y), min(b1.min.z, b2.min.z)),

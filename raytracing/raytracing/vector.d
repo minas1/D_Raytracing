@@ -6,7 +6,7 @@ struct Vector3(T)
 {
 	T x, y, z;
 	
-	this(T _x, T _y, T _z)
+	this(T _x, T _y, T _z) @safe pure nothrow
 	{
 		x = _x;
 		y = _y;
@@ -14,7 +14,7 @@ struct Vector3(T)
 	}
 	
 	// negate operator
-	Vector3 opUnary(string s)() const if( s == "-" )
+	Vector3 opUnary(string s)() const @safe pure nothrow if( s == "-" )
 	{
 		Vector3 temp = this;
 		
@@ -26,13 +26,13 @@ struct Vector3(T)
 	}
 	
 	// + operator for completeness
-	Vector3 opUnary(string s)() const if( s == "+" )
+	Vector3 opUnary(string s)() const @safe pure nothrow if( s == "+" ) 
 	{
 		return this;
 	}
 	
 	// binary operators
-	Vector3 opBinary(string op) (T val) const
+	Vector3 opBinary(string op) (T val) const @safe pure nothrow
 	{
 		static if( op == "+" )
 		{
@@ -66,7 +66,7 @@ struct Vector3(T)
 		return temp;
 	}
 	
-	Vector3 opBinary(string op) (Vector3 v) const
+	Vector3 opBinary(string op) (Vector3 v) const @safe pure nothrow
 	{
 		static if( op == "+" )
 		{
@@ -93,7 +93,7 @@ struct Vector3(T)
 		return temp;
 	}
 	
-	Vector3 opBinary(string op) (ref Vector3 v) const
+	Vector3 opBinary(string op) (ref Vector3 v) const @safe pure nothrow
 	{
 		static if( op == "+" )
 		{
@@ -118,6 +118,70 @@ struct Vector3(T)
 		}
 		
 		return temp;
+	}
+	
+	ref Vector3 opOpAssign(string op) (T val) @safe pure nothrow
+	{
+		static if( op == "+" )
+		{
+			x += val;
+			y += val;
+			z += val;
+		}
+		else static if( op == "-" )
+		{
+			x -= val;
+			y -= val;
+			z -= val;
+		}
+		else static if( op == "*" )
+		{
+			x *= val;
+			y *= val;
+			z *= val;
+		}
+		else static if( op == "/" )
+		{
+			x /= val;
+			y /= val;
+			z /= val;
+		}
+		else
+			static assert(false, "unsupported operator " ~ op);
+		
+		return this;
+	}
+	
+	ref Vector3 opOpAssign(string op) (Vector3 v) @safe pure nothrow
+	{
+		static if( op == "+" )
+		{
+			x += v.x;
+			y += v.y;
+			z += v.z;
+		}
+		else static if( op == "-" )
+		{
+			x -= v.x;
+			y -= v.y;
+			z -= v.z;
+		}
+		else static if( op == "*" )
+		{
+			x *= v.x;
+			y *= v.y;
+			z *= v.z;
+		}
+		else static if( op == "/" )
+		{
+			x /= v.x;
+			y /= v.y;
+			z /= v.z;
+		}
+		else
+			static assert(false, "unsupported operator " ~ op);
+		
+		return this;
 	}
 }
 
