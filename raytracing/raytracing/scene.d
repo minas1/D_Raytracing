@@ -6,7 +6,7 @@ import raytracing.ray;
 import raytracing.surfaces.surface;
 import raytracing.light;
 import raytracing.box;
-import raytracing.bvh;
+import raytracing.surfaces.bvh;
 import raytracing.vector;
 
 /// Represents a scene which contains Object and Lights

@@ -9,7 +9,7 @@ import raytracing.surfaces.surface;
 import raytracing.material;
 import raytracing.light;
 import raytracing.box;
-import raytracing.bvh;
+import raytracing.surfaces.bvh;
 import raytracing.math;
 
 import std.parallelism;

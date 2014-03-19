@@ -1,10 +1,12 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="raytracing/raytracing/raytracer.d">
+  <MonoDevelop.Ide.Workbench ActiveDocument="raytracing/raytracing/surfaces/bvh.d">
     <Files>
-      <File FileName="raytracing/main.d" Line="59" Column="2" />
-      <File FileName="raytracing/raytracing/scene.d" Line="29" Column="50" />
-      <File FileName="raytracing/raytracing/raytracer.d" Line="57" Column="7" />
+      <File FileName="raytracing/raytracing/box.d" Line="74" Column="53" />
+      <File FileName="raytracing/raytracing/surfaces/bvh.d" Line="7" Column="20" />
+      <File FileName="raytracing/raytracing/scene.d" Line="9" Column="28" />
+      <File FileName="raytracing/main.d" Line="42" Column="2" />
+      <File FileName="raytracing/raytracing/meshloader.d" Line="5" Column="27" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

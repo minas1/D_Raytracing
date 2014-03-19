@@ -43,7 +43,6 @@
 -L-lDerelictSDL
 -L-lDerelictUtil
 -L-ldl</ExtraLinkerArguments>
-    <ExtraCompilerArguments>-gc</ExtraCompilerArguments>
     <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
     <Externalconsole>true</Externalconsole>
   </PropertyGroup>
@@ -72,7 +71,6 @@
     <Compile Include="raytracing\material.d" />
     <Compile Include="raytracing\light.d" />
     <Compile Include="raytracing\meshloader.d" />
-    <Compile Include="raytracing\bvh.d" />
     <Compile Include="raytracing\math.d" />
     <Compile Include="raytracing\mesh.d" />
     <Compile Include="raytracing\materials\SimpleColor.d" />
@@ -80,6 +78,7 @@
     <Compile Include="raytracing\surfaces\sphere.d" />
     <Compile Include="raytracing\surfaces\surface.d" />
     <Compile Include="raytracing\surfaces\triangle.d" />
+    <Compile Include="raytracing\surfaces\bvh.d" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="raytracing\" />

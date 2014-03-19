@@ -11,7 +11,7 @@ import raytracing.material;
 import raytracing.light;
 import raytracing.meshloader;
 import raytracing.box;
-import raytracing.bvh;
+import raytracing.surfaces.bvh;
 import raytracing.math;
 import raytracing.raytracer;
 
@@ -51,7 +51,6 @@ void main()
 
 	// do necessary scene pre-calculations (e.g creation of BVH Tree)
 	scene.preCalc();
-	
 	writeln("The scene has ", scene.objects.length, " triangles.");
 
 	StopWatch watch;
@@ -139,9 +138,7 @@ void makeScene1(ref Scene scene)
 }
 
 void makeScene2(ref Scene scene)
-{	
-
-
+{
 	Sphere planet = new Sphere(Vector3!double(-500, 0, 10000), 6000);
 	planet.material = new SimpleColor(Vector3!float(0, 0, 0), Vector3!float(1.0f, 0.5f, 0.128f), Vector3!float(1, 1, 1), 10);
 	scene.objects.insert(planet);
@@ -179,22 +176,4 @@ void makeScene2(ref Scene scene)
 	l.w = Vector3!double(0, 0, 3);
 	l.I = Vector3!float(0.95f, 0.95f, 0.95f);
 	scene.lights.insert(l);
-}
-
-/// recursively prints a BVH tree to the standard output
-void printBVH(Surface root, int i = 0, string str = "")
-{
-	if( root is null )
-		return;
-	
-	writeln("------PRINT()------");
-	//writeln("Name = ", root.name);
-	writeln(root.boundingBox());
-	writeln("------~~~~~~~------\n");
-	
-	if( (cast(BVHNode)root) !is null )
-	{
-		printBVH((cast(BVHNode)(root)).left, i+1, "left");
-		printBVH((cast(BVHNode)(root)).right, i+1, "right");
-	}
 }

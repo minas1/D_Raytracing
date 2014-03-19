@@ -6,6 +6,7 @@ import raytracing.ray;
 import std.stdio;
 import std.algorithm;
 
+/// An axis aligned bounding box
 struct Box
 {
 	Vector3!double min, max;
@@ -70,6 +71,7 @@ struct Box
 	}
 }
 
+/// Combines two boxes and returns their combination
 Box combine(const ref Box b1, const ref Box b2) @safe pure nothrow
 {
 	Box box = {
