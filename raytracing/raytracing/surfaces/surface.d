@@ -1,4 +1,4 @@
-module raytracing.surface;
+module raytracing.surfaces.surface;
 
 import raytracing.ray;
 import raytracing.box;

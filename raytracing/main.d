@@ -3,10 +3,10 @@ import std.datetime;
 
 import raytracing.vector;
 import raytracing.ray;
-import raytracing.sphere;
-import raytracing.triangle;
+import raytracing.surfaces.sphere;
+import raytracing.surfaces.triangle;
 import raytracing.scene;
-import raytracing.surface;
+import raytracing.surfaces.surface;
 import raytracing.material;
 import raytracing.light;
 import raytracing.meshloader;
@@ -58,11 +58,22 @@ void main()
 	watch.start();
 
 	// do raytracing
-	new Raytracer().run(scene, cameraPos, screen, ANTIALIASING_SAMPLES);
-	
+	auto raytracer = new Raytracer(SCREEN_WIDTH, SCREEN_HEIGHT);
+	raytracer.run(scene, cameraPos, ANTIALIASING_SAMPLES);
+
 	watch.stop();
 	writeln(watch.peek().nsecs / 1_000_000_000.0, " s");
-	
+
+	// get the results from the raytracer and update the screen's surface
+	for(int x = 0; x < SCREEN_WIDTH; ++x)
+	{
+		for(int y = 0; y < SCREEN_HEIGHT; ++y)
+		{
+			auto pixelColor = raytracer.pixels[y][x];
+			writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(pixelColor.x * 255), cast(ubyte)(pixelColor.y * 255), cast(ubyte)(pixelColor.z * 255));	
+		}
+	}
+
 	SDL_Flip(screen); // update the screen
 
 	SDL_Event event;
@@ -91,6 +102,19 @@ void init()
 	atexit(SDL_Quit);
 	
 	SDL_WM_SetCaption("Raytracing in D", null);
+}
+
+/// writes pixel [r, g, b] at position [x,y] of the given SDL_Surface
+void writePixel(SDL_Surface *s, int x, int y, ubyte r, ubyte g, ubyte b)
+{
+	if( SDL_MUSTLOCK(s) ) SDL_LockSurface(s);
+	
+	Uint32 color = SDL_MapRGB(s.format, r, g, b);
+	ubyte* pData = cast(ubyte*)s.pixels + y * s.pitch + x * s.format.BytesPerPixel;
+	
+	std.c.string.memcpy(pData, &color, s.format.BytesPerPixel);
+	
+	if( SDL_MUSTLOCK(s) ) SDL_UnlockSurface(s);
 }
 
 void makeScene1(ref Scene scene)

@@ -1,9 +1,9 @@
-module raytracing.sphere;
+module raytracing.surfaces.sphere;
 
 import std.stdio;
 import std.math;
 
-import raytracing.surface;
+import raytracing.surfaces.surface;
 import raytracing.ray;
 import raytracing.box;
 import raytracing.vector;

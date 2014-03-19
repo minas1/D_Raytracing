@@ -2,7 +2,7 @@ module raytracing.meshloader;
 
 public import raytracing.mesh;
 
-import raytracing.triangle;
+import raytracing.surfaces.triangle;
 import raytracing.vector;
 
 import std.stdio;

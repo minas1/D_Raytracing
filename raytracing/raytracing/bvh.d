@@ -1,6 +1,6 @@
 module raytracing.bvh;
 
-import raytracing.surface, raytracing.box, raytracing.vector, raytracing.ray, raytracing.scene;
+import raytracing.surfaces.surface, raytracing.box, raytracing.vector, raytracing.ray, raytracing.scene;
 
 class BVHNode : Surface
 {

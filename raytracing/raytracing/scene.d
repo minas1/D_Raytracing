@@ -3,7 +3,7 @@ module raytracing.scene;
 import std.container;
 
 import raytracing.ray;
-import raytracing.surface;
+import raytracing.surfaces.surface;
 import raytracing.light;
 import raytracing.box;
 import raytracing.bvh;

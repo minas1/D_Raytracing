@@ -1,7 +1,7 @@
 module raytracing.material;
 
 import raytracing.vector;
-import raytracing.surface;
+import raytracing.surfaces.surface;
 import raytracing.scene;
 
 abstract interface Material

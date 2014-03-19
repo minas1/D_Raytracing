@@ -67,22 +67,23 @@
     <Compile Include="main.d" />
     <Compile Include="raytracing\box.d" />
     <Compile Include="raytracing\ray.d" />
-    <Compile Include="raytracing\surface.d" />
     <Compile Include="raytracing\vector.d" />
-    <Compile Include="raytracing\sphere.d" />
     <Compile Include="raytracing\scene.d" />
     <Compile Include="raytracing\material.d" />
     <Compile Include="raytracing\light.d" />
-    <Compile Include="raytracing\triangle.d" />
     <Compile Include="raytracing\meshloader.d" />
     <Compile Include="raytracing\bvh.d" />
     <Compile Include="raytracing\math.d" />
     <Compile Include="raytracing\mesh.d" />
     <Compile Include="raytracing\materials\SimpleColor.d" />
     <Compile Include="raytracing\raytracer.d" />
+    <Compile Include="raytracing\surfaces\sphere.d" />
+    <Compile Include="raytracing\surfaces\surface.d" />
+    <Compile Include="raytracing\surfaces\triangle.d" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="raytracing\" />
     <Folder Include="raytracing\materials\" />
+    <Folder Include="raytracing\surfaces\" />
   </ItemGroup>
 </Project>

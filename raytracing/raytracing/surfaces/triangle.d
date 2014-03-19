@@ -1,7 +1,7 @@
-module raytracing.triangle;
+module raytracing.surfaces.triangle;
 
 import raytracing.vector;
-import raytracing.surface;
+import raytracing.surfaces.surface;
 import raytracing.scene;
 import raytracing.box;
 import raytracing.ray;

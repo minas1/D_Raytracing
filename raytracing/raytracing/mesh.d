@@ -1,6 +1,6 @@
 module raytracing.mesh;
 
-import raytracing.triangle;
+import raytracing.surfaces.triangle;
 
 import std.container;
 

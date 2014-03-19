@@ -2,17 +2,15 @@
 
 import raytracing.vector;
 import raytracing.ray;
-import raytracing.sphere;
-import raytracing.triangle;
+import raytracing.surfaces.sphere;
+import raytracing.surfaces.triangle;
 import raytracing.scene;
-import raytracing.surface;
+import raytracing.surfaces.surface;
 import raytracing.material;
 import raytracing.light;
-import raytracing.meshloader;
 import raytracing.box;
 import raytracing.bvh;
 import raytracing.math;
-import derelict.sdl.sdl;
 
 import std.parallelism;
 import std.range;
@@ -21,6 +19,17 @@ import std.random;
 
 class Raytracer
 {
+	public Vector3!(float)[][] pixels;
+	private int width, height;
+
+	this(int _width, int _height)
+	{
+		width = _width;
+		height = _height;
+
+		pixels = new Vector3!(float)[][](height, width);
+	}
+
 	/** Performs raytracing. This is a blocking call
 	 * Params:
 	 * 	scene = Our scene
@@ -28,10 +37,10 @@ class Raytracer
 	 * 	screen = The SDL_Surface we are writing in
 	 * 	aaSamples = Number of anti-aliasing samples. Use 1 for no anti-aliasing
 	 */
-	void run(ref Scene scene, const ref Vector3!double cameraPos, SDL_Surface* screen, int aaSamples)
+	void run(ref Scene scene, const ref Vector3!double cameraPos, int aaSamples)
 	{
-		const SCREEN_WIDTH = screen.w;
-		const SCREEN_HEIGHT = screen.h;
+		const SCREEN_WIDTH = width;
+		const SCREEN_HEIGHT = height;
 		const ASPECT_RATIO = SCREEN_WIDTH / cast(float)SCREEN_HEIGHT;
 
 		// calculate square root of antialiasing samples
@@ -72,23 +81,11 @@ class Raytracer
 					}
 				}
 				pixelColor /= N * N;
-				
-				writePixel(screen, x, SCREEN_HEIGHT - 1 - y, cast(ubyte)(pixelColor.x * 255), cast(ubyte)(pixelColor.y * 255), cast(ubyte)(pixelColor.z * 255));	
+
+
+				pixels[y][x] = pixelColor;
 			}
 		}
-	}
-
-	/// writes pixel [r, g, b] at position [x,y] of the given SDL_Surface
-	private void writePixel(SDL_Surface *s, int x, int y, ubyte r, ubyte g, ubyte b)
-	{
-		if( SDL_MUSTLOCK(s) ) SDL_LockSurface(s);
-		
-		Uint32 color = SDL_MapRGB(s.format, r, g, b);
-		ubyte* pData = cast(ubyte*)s.pixels + y * s.pitch + x * s.format.BytesPerPixel;
-		
-		std.c.string.memcpy(pData, &color, s.format.BytesPerPixel);
-		
-		if( SDL_MUSTLOCK(s) ) SDL_UnlockSurface(s);
 	}
 }
 

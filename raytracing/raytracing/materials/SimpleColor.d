@@ -2,7 +2,7 @@
 
 import raytracing.vector;
 import raytracing.material;
-import raytracing.surface;
+import raytracing.surfaces.surface;
 import raytracing.scene;
 import raytracing.light;
 import raytracing.ray;
@@ -11,10 +11,10 @@ import std.random;
 
 class SimpleColor : Material
 {
-	Vector3!float ka;	// ambient component
-	Vector3!float kd;	// diffuse component
-	Vector3!float ks;	// specular component
-	float specularComponent; // component that specifies the size of the specular highlight 
+	Vector3!float ka;			/// ambient component
+	Vector3!float kd;			/// diffuse component
+	Vector3!float ks;			/// specular component
+	float specularComponent; 	/// component that specifies the size of the specular highlight 
 	
 	this(Vector3!float _ka, Vector3!float _kd, Vector3!float _ks, float _specularComponent)
 	{
