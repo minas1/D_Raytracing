@@ -11,8 +11,16 @@ Features
    
 Prerequisites
 ----
-   - D compiler
-   - Derelict2 (SDL bindings for D)
+   - [DMD D compiler]
+
+How to run
+----
+* Open a terminal in the ```source``` directory.
+* Execute ```rdmd main.d```
+
+After about 25" the image below will appear.
+
+![Alt text](/screenshots/raytracing.png?raw=true "Example plot")
 
 Internals
 ----
@@ -23,6 +31,6 @@ License
 
 MIT
 
-
+ [DMD D compiler]:http://dlang.org/download.html
 [Bounding Volume Hierarchy]:http://en.wikipedia.org/wiki/Bounding_volume_hierarchy
 [BVH.d]:https://github.com/minas1/D_Raytracing/blob/master/raytracing/raytracing/surfaces/bvh.d
