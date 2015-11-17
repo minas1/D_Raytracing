@@ -7,7 +7,6 @@ Features
 ----
    - Smooth shadows
    - Anti-aliasing
-   - Parallel calculation using threads (if available)
    
 Prerequisites
 ----
